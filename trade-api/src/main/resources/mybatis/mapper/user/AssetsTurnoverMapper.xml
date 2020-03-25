@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.converage.mapper.user.AssetsTurnoverMapper">
+    <resultMap id="BaseResultMap" type="AssetsTurnover">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="turnover_title" property="turnoverTitle" jdbcType="VARCHAR"/>
+        <result column="turnover_type" property="turnoverType" jdbcType="INTEGER"/>
+        <result column="turnover_amount" property="turnoverAmount" jdbcType="DECIMAL"/>
+        <result column="after_amount" property="afterAmount" jdbcType="DECIMAL"/>
+        <result column="source_id" property="sourceId" jdbcType="VARCHAR"/>
+        <result column="target_id" property="targetId" jdbcType="VARCHAR"/>
+        <result column="settlement_id" property="settlementId" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="detail_str" property="detailStr" jdbcType="VARCHAR"/>
+        <result column="in_out_type" property="inOutType" jdbcType="INTEGER"/>
+        <!-- 扩展 -->
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="user_account" property="userAccount" jdbcType="VARCHAR"/>
+        <result column="head_picture_url" property="headPictureUrl" jdbcType="VARCHAR"/>
+        <result column="phone_number" property="phoneNumber" jdbcType="VARCHAR"/>
+        <result column="charge_status" property="chargeStatus" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        t.id, t.user_id, t.turnover_type, t.turnover_amount, t.after_amount, t.source_id,
+        t.target_id, t.settlement_id, t.create_time, t.detail_str, in_out_type
+    </sql>
+
+    <select id="selectByPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>, ui.user_account, ui.head_picture_url, ui.phone_number
+        <include refid="whereSql"/>
+        <if test="sortProp != null">
+            ORDER BY
+            ${sortProp}
+            <if test="sortType != null">
+                ${sortType}
+            </if>
+        </if>
+    </select>
+    <sql id="whereSql">
+        from assets_turnover t
+        join user_info ui on ui.id = t.user_id
+        where 1 = 1
+        <if test="startTime != null">
+            and t.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t.create_time &lt;= #{endTime}
+        </if>
+        <if test="param.turnoverType != null">
+            and t.turnover_type = #{param.turnoverType}
+        </if>
+        <if test="param.inOutType != null">
+            <choose>
+                <when test="param.inOutType ==0">
+                    AND source_id = '1'
+                </when>
+                <otherwise>
+                    AND target_id = '1'
+                </otherwise>
+            </choose>
+        </if>
+        <if test="param.settlementId != null">
+            and t.settlement_id = #{param.settlementId}
+        </if>
+        <if test="param.phoneNumber != null">
+            and ui.phone_number LIKE CONCAT('%',#{param.phoneNumber},'%')
+        </if>
+        <if test="param.userAccount != null">
+            and ui.user_account LIKE CONCAT('%',#{param.userAccount},'%')
+        </if>
+    </sql>
+    <select id="selectTotal" resultMap="BaseResultMap">
+        SELECT IFNULL(SUM(ABS(t.turnover_amount)), 0) 'turnover_amount'
+        <include refid="whereSql"/>
+    </select>
+
+    <select id="listUserTurnover" resultMap="BaseResultMap">
+        SELECT
+        a.id, a.user_id, a.turnover_type,a.turnover_title, a.turnover_amount, a.after_amount,a.source_id,
+        a.target_id, a.settlement_id, a.create_time, a.detail_str,a.in_out_type,b.user_name,c.status as charge_status
+        FROM assets_turnover a
+        LEFT JOIN user_info b ON a.user_id = b.id
+        LEFT JOIN user_assets_charge c on a.charge_id = c.id
+        WHERE a.user_id = #{userId}
+        <if test="turnoverType!=0">
+            AND a.turnover_type = #{turnoverType}
+        </if>
+        <if test="settlementId!=null">
+            AND a.settlement_id = #{settlementId}
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="listUserSettlementTurnover" resultMap="BaseResultMap">
+        SELECT
+        a.id, a.user_id, a.turnover_type,a.turnover_title, a.turnover_amount, a.after_amount,a.source_id,
+        a.target_id, a.settlement_id, a.create_time, a.detail_str,a.in_out_type,b.user_name
+        FROM assets_turnover a LEFT JOIN user_info b ON a.user_id = b.id
+        WHERE a.user_id = #{userId}
+        <if test="turnoverType!= null">
+            AND a.turnover_type = #{turnoverType}
+        </if>
+        <if test="settlementId!= null">
+            AND a.settlement_id = #{settlementId}
+        </if>
+        <if test="inOutType!= null">
+            <choose>
+                <when test="inOutType == 0">
+                    AND a.source_id = #{userId}
+                </when>
+                <otherwise>
+                    AND a.target_id = #{userId}
+                </otherwise>
+            </choose>
+
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Integer">
+      SELECT COUNT(*) FROM assets_turnover WHERE user_id = #{userId} AND turnover_type = #{turnoverType} AND DATE_FORMAT(create_time,'%Y-%m-%d') = #{dateStr}
+    </select>
+    <select id="countReward" resultType="java.math.BigDecimal">
+        SELECT IFNULL(
+        (SELECT SUM(turnover_amount) FROM assets_turnover WHERE turnover_title LIKE CONCAT("%",#{turnoverTitle},"%")
+        <if test="dateStr!=null">AND DATE_FORMAT(create_time,'%Y-%m-%d') = #{dateStr}</if>),0
+        )
+    </select>
+
+
+</mapper>

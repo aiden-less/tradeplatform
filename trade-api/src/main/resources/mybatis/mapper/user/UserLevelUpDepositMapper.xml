@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.converage.mapper.user.UserLevelUpDepositMapper">
+    <resultMap id="BaseResultMap" type="com.converage.entity.user.UserLevelUpDeposit">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="settlement_id" property="settlementId" jdbcType="INTEGER"/>
+        <result column="expire_time" property="expireTime" jdbcType="TIMESTAMP"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+      t.id, t.user_id, t.amount, t.settlement_id, t.expire_time, t.create_time
+    </sql>
+
+    <select id="selectTotalByUserId" resultType="double">
+        select IFNULL(SUM(t.amount), 0) from user_level_up_deposit t where t.user_id = #{userId};
+    </select>
+</mapper>

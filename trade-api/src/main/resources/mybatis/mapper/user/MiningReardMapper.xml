@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.user.MiningRewardMapper">
+
+    <resultMap id="userMiningMachine" type="UserMiningMachine">
+        <id property="id" column="id"></id>
+        <result property="machineId" column="machine_id"></result>
+        <result property="machineVolume" column="machine_volume"></result>
+        <result property="machineName" column="machine_name"></result>
+        <result property="userId" column="user_id"></result>
+        <result property="settlementId" column="settlement_id"></result>
+        <result property="dailyReward" column="daily_reward"></result>
+        <result property="totalReward" column="total_reward"></result>
+        <result property="surplusReward" column="surplus_reward"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="expireTime" column="expire_time"></result>
+        <result property="ifValid" column="if_valid"></result>
+        <result property="userLevel" column="level"></result>
+    </resultMap>
+
+
+    <update id="updateStolenCount" parameterType="MiningReward">
+        UPDATE mining_reward SET stolen_count =#{stolenCount},version = version + 1 WHERE version = #{version} AND id = #{id}
+    </update>
+
+    <update id="cancelMining">
+      UPDATE mining_reward SET if_valid = 0 WHERE if_valid = TRUE AND id = #{miningRewardId} AND user_id = #{userId}
+    </update>
+
+
+    <update id="cancelMiningMachine">
+      UPDATE user_mining_machine SET if_valid = FALSE WHERE id = #{userMiningMachineId}
+    </update>
+
+    <update id="decreaseUserMiningMachineSurplus">
+      UPDATE user_mining_machine SET surplus_reward = surplus_reward - #{rewardValue} WHERE id = #{userMiningMachineId}
+    </update>
+
+    <select id="listUserMiningMachine" resultMap="userMiningMachine">
+      SELECT a.*,b.level FROM user_mining_machine a LEFT JOIN user_info b ON a.user_id = b.id
+      WHERE if_valid = TRUE
+    </select>
+
+    <select id="countTodayMiningReward" resultType="java.math.BigDecimal">
+      SELECT IFNULL(SUM(reward_amount),0) FROM mining_reward WHERE user_id = #{userId} AND DATE_FORMAT(create_time,'%Y-%m-%d') = #{dateStr}
+    </select>
+
+    <select id="countUserMachine" resultType="java.lang.Integer">
+      SELECT COUNT(*) FROM user_mining_machine WHERE user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,43 @@
+server:
+  port: 8091
+#  port: 6666
+#  port: 8088
+spring:
+  datasource:
+    username: root
+    password: lujiTestMysql@2204
+    url: jdbc:mysql://47.106.158.56:3506/taste?characterEncoding=utf8&useSSL=false
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      auto-commit: true
+      minimum-idle: 1
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      max-lifetime: 1800000
+      pool-name: HikariCP
+      connection-timeout: 180000
+      connection-test-query: SELECT 1
+      validation-timeout: 180000
+
+  redis:
+    host: 47.106.158.56
+    port: 6379
+    password: luji666888
+    lettuce:
+      pool:
+        max-active: 8
+        min-idle: 0
+        max-idle: 8
+        max-wait: -1s
+    database: 3
+
+taste-file-path:
+  reward-code: /root/rsa/qrcode
+  reward-code-zip: /root/rsa/qrcodeZip
+  rsa-private-key: /root/rsa/pkcs8_private_key.pem
+  wallet-eth-folder: /root/wallet
+
+trade-match:
+  ip: 127.0.0.1
+  port: 9999

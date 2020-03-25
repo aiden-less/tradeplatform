@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.user.LctAssetsMapper">
+
+    <update id="increase">
+        UPDATE lct_assets SET
+        assets_amount = assets_amount + #{amount}
+        WHERE user_id = #{userId} AND coin_id = #{coinId}
+    </update>
+
+    <update id="decrease">
+        UPDATE lct_assets SET
+        assets_amount = assets_amount - #{amount}
+        WHERE user_id = #{userId}
+        AND assets_amount - #{amount}>=0
+        AND coin_id = #{coinId}
+    </update>
+
+</mapper>

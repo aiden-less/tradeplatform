@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.user.UserFreeCountMapper">
+
+    <update id="decreaseUserFreeCount">
+        UPDATE user_free_count
+        SET ${field} = ${field} -1
+        WHERE user_id = #{userId}
+        AND ${field} > #{limitVal}
+    </update>
+
+    <update id="initMaxCount">
+        UPDATE user_free_count
+        <trim prefix="SET" suffixOverrides=",">
+            <foreach collection="fields" item="field" separator=",">
+                ${field} = #{maxCount}
+            </foreach>
+        </trim>
+        WHERE ${field} &lt; #{maxCount}
+    </update>
+
+    <update id="increaseUserFreeCount">
+        UPDATE user_free_count
+        SET ${field} = ${field} +1
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="setUserFreeCount">
+        UPDATE user_free_count
+        SET ${field} = #{number}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="getCount" resultType="java.lang.Integer">
+      select ${field} FROM user_free_count WHERE user_id = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.user.CctFrozenAssetsMapper">
+
+    <resultMap id="cctFrozenAssetsMap" type="CctFrozenAssets">
+
+    </resultMap>
+
+
+    <update id="increase">
+        UPDATE cct_frozen_assets SET
+        assets_amount = assets_amount + #{amount}
+        WHERE user_id = #{userId} AND coin_id = #{coinId}
+    </update>
+
+    <update id="decrease">
+        UPDATE cct_frozen_assets SET
+        assets_amount = assets_amount - #{amount}
+        WHERE user_id = #{userId}
+        AND assets_amount - #{amount}>=0
+        AND coin_id = #{coinId}
+    </update>
+
+    <select id="listRefund" resultMap="cctFrozenAssetsMap">
+        SELECT a.id,a.coin_id,a.user_id,a.assets_amount,a.if_refund,a.create_time
+          FROM cct_frozen_assets a LEFT join cct_order b on a.order_id = b.id
+          WHERE a.if_refund = FALSE AND b.status = #{status}
+    </select>
+
+</mapper>

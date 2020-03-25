@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.converage.mapper.common.GlobalConfigMapper">
+
+    <update id="updateValue">
+        UPDATE global_config SET config_value = #{value} WHERE config_key = #{key}
+    </update>
+
+    <select id="getByDb" resultType="java.lang.String">
+        SELECT config_value FROM global_config WHERE config_key = #{key}
+    </select>
+
+</mapper>

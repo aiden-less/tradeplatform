@@ -1,0 +1,11 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  profiles:
+    active: dev
+mybatis:
+  mapperLocations: classpath:mybatis/mapper/**/*.xml
+  typeAliasesPackage: com.converagege.entity
+  configLocation: classpath:mybatis/config/mybatis-config.xml

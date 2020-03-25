@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.shop.QuotasMapper">
+
+    <resultMap id="userQuotasMap" type="UserQuotas">
+        <id column="id" property="id"/>
+        <result column="quotas_name" property="quotasName"/>
+        <result column="quotas_description" property="quotasDescription"/>
+        <result column="user_account" property="userAccount"/>
+        <result column="settlement_id" property="settlementId"/>
+        <result column="spend_amount" property="spendAmount"/>
+        <result column="ore_amount" property="oreAmount"/>
+        <result column="quotas_volume" property="quotasVolume"/>
+        <result column="quotas_type" property="quotasType"/>
+        <result column="create_time" property="createTime"/>
+        <result column="use_time" property="useTime"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="status" property="status"/>
+        <result column="if_valid" property="ifValid"/>
+        <result column="pay_desc" property="payDesc"/>
+        <result column="home_img" property="homeImg"/>
+    </resultMap>
+
+    <update id="updateQuotasValidity">
+      UPDATE user_quotas a SET a.status = #{status} WHERE a.status = 0 AND a.id = #{recordId}
+    </update>
+
+    <select id="selectByPage" resultMap="userQuotasMap">
+        SELECT
+        a.quotas_name,a.quotas_description,b.user_account,a.settlement_id,a.spend_amount,a.ore_amount,a.quotas_volume,a.quotas_type,
+        a.create_time,a.use_time,a.expire_time,a.status,a.if_valid,a.pay_desc,a.home_img
+        <include refid="whereSql"/>
+        <if test="sortProp != null">
+            ORDER BY
+            ${sortProp}
+            <if test="sortType != null">
+                ${sortType}
+            </if>
+        </if>
+    </select>
+    <sql id="whereSql">
+        FROM user_quotas a LEFT JOIN user_info b on a.user_id = b.id
+        WHERE 1 = 1
+        <if test="startTime != null">
+            AND a.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND a.create_time &lt;= #{endTime}
+        </if>
+        <if test="param.ifValid != null">
+            AND a.if_valid = #{param.ifValid}
+        </if>
+        <if test="param.quotasVolume != null">
+            AND a.quotas_volume = #{param.quotasVolume}
+        </if>
+        <if test="param.status != null">
+            AND a.`status` = #{param.status}
+        </if>
+        <if test="param.quotasType != null">
+            AND a.quotas_type = #{param.quotasType}
+        </if>
+        <if test="param.userAccount != null">
+            AND b.user_account = #{param.userAccount}
+        </if>
+    </sql>
+    <select id="selectTotal" resultMap="userQuotasMap">
+        SELECT IFNULL(SUM(a.spend_amount), 0) 'spend_amount',
+        IFNULL(SUM(a.ore_amount), 0) 'ore_amount',
+        IFNULL(SUM(a.quotas_volume), 0) 'quotas_volume'
+        <include refid="whereSql"/>
+    </select>
+</mapper>

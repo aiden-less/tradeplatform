@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/trade-api/trade-api.iml" filepath="$PROJECT_DIR$/trade-api/trade-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/trade-common/trade-common.iml" filepath="$PROJECT_DIR$/trade-common/trade-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/trade-match/trade-match.iml" filepath="$PROJECT_DIR$/trade-match/trade-match.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tradeplatform.iml" filepath="$PROJECT_DIR$/tradeplatform.iml" />
+    </modules>
+  </component>
+</project>

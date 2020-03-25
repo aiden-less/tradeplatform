@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.shop.OrderMapper">
+    <resultMap id="orderGoodsInfoMap" type="OrderGoodsInfo">
+        <id property="orderId" column="order_id"></id>
+        <result property="orderNo" column="order_no"></result>
+        <result property="userName" column="user_name"></result>
+        <result property="settlementId" column="settlement_id"></result>
+        <result property="currencyPrice" column="currency_price"></result>
+        <result property="integralPrice" column="integral_price"></result>
+        <result property="cnyPrice" column="cny_price"></result>
+        <result property="orderPrice" column="order_price"></result>
+        <result property="orderFreight" column="order_freight"></result>
+        <result property="status" column="order_status"></result>
+        <result property="statusStr" column="status_str"></result>
+        <result property="ifInvestigation" column="If_investigation"></result>
+        <result property="ifScan" column="if_scan"></result>
+        <result property="logisticNumber" column="logistic_number"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="payTime" column="pay_time"></result>
+        <result property="orderType" column="order_type"></result>
+        <result property="ifValid" column="if_valid"></result>
+        <result property="shoperName" column="shoper_name"/>
+        <result property="phoneNumber" column="shoper_tel"/>
+        <result property="detailAddress" column="shoper_address"/>
+        <collection property="orderItemList" ofType="OrderItem" column="order_id">
+            <result property="id" column="id"></result>
+            <result property="orderItemId" column="id"></result>
+            <result property="orderId" column="order_id"></result>
+            <result property="goodsSpuId" column="spu_id"></result>
+            <result property="goodsSkuId" column="sku_id"></result>
+            <result property="settlementId" column="settlement_id"></result>
+            <result property="number" column="number"></result>
+            <result property="currencyPrice" column="order_item_currency_price"></result>
+            <result property="integralPrice" column="order_item_integral_price"></result>
+            <result property="cnyPrice" column="order_item_cny_price"></result>
+            <result property="totalPrice" column="order_item_total_price"></result>
+            <result property="goodsName" column="spu_name"></result>
+            <result property="goodsDescription" column="spu_description"></result>
+            <result property="imgUrl" column="default_img_url"></result>
+            <result property="specJson" column="spec_json"></result>
+            <result property="status" column="order_item_status"></result>
+        </collection>
+    </resultMap>
+
+    <resultMap id="orderInfoMap" type="OrderInfo">
+        <id property="id" column="id"></id>
+        <result property="currencyPrice" column="currency_price"></result>
+        <result property="cnyPrice" column="cny_price"></result>
+        <result property="orderNo" column="order_no"></result>
+        <result property="ifPay" column="if_pay"></result>
+    </resultMap>
+
+    <sql id="listOrderGoodsInfo">
+        SELECT
+            a.id as order_id,
+            a.order_no,
+            a.settlement_id,
+            a.currency_price,
+            a.integral_price,
+            a.cny_price,
+            a.order_price,
+            a.freight as order_freight,
+            a.create_time,
+            a.user_name,
+            a.status as order_status,
+            a.status_str,
+            a.logistic_number,
+            a.If_investigation,
+            a.pay_time,
+            a.order_type,
+            a.if_valid,
+            a.shoper_name,
+            a.shoper_tel,
+            a.shoper_address,
+            b.id,
+            b.number,
+            b.currency_price as order_item_currency_price,
+            b.integral_price as order_item_integral_price,
+            b.cny_price as order_item_cny_price,
+            b.total_price as order_item_total_price,
+            b.status as order_item_status,
+            c.id as spu_id,
+            c.goods_name as spu_name,
+            c.goods_description as spu_description,
+            c.default_img_url,
+            d.id as sku_id,
+            d.spec_json
+        FROM
+            order_info a
+            LEFT JOIN order_item b on a.id = b.order_id
+            LEFT JOIN goods_spu c on b.goods_spu_id = c.id
+            LEFT JOIN goods_sku d on b.goods_sku_id = d.id
+    </sql>
+
+
+    <update id="updateOrderList4Pay">
+        UPDATE order_info
+        SET if_pay = TRUE ,pay_time = NOW(),settlement_id = #{settlementId}
+        WHERE
+        user_id = #{userId}
+        AND if_pay = FALSE
+        AND id IN
+        <foreach collection="orderInfoList" open="(" close=")" separator="," item="orderInfo">
+            #{orderInfo.id}
+        </foreach>;
+    </update>
+
+    <update id="updateOrder4Pay">
+        UPDATE order_info
+          SET if_pay = TRUE ,pay_time = NOW(),settlement_id = #{settlementId},order_price = #{orderPrice},status = #{status}
+        WHERE
+          user_id = #{userId}
+        AND if_pay = FALSE
+        AND id = #{orderId}
+    </update>
+
+    <update id="updateOrderListStatus">
+        UPDATE order_info SET status = #{orderStatus} WHERE id IN
+        <foreach collection="orderIds" open="(" close=")" separator="," item="orderId">
+            #{orderId}
+        </foreach>
+    </update>
+
+    <update id="updateOrderItemsStatus">
+      UPDATE order_item SET status = #{status} WHERE order_id = #{orderId}
+    </update>
+
+    <update id="updateOrderItem4Pay">
+      UPDATE order_item SET total_price = #{orderPrice} WHERE order_id = #{orderId}
+    </update>
+
+
+    <select id="listUserOrderGoods" resultMap="orderGoodsInfoMap">
+        <include refid="listOrderGoodsInfo"/>
+        WHERE
+        a.user_id = #{userId}
+        <if test="orderStatus != 100 ">
+            AND a.status=#{orderStatus}
+        </if>
+        <if test="orderType != null ">
+            AND a.order_type=#{orderType}
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="getUserOrderGoodsInfo" resultMap="orderGoodsInfoMap">
+        <include refid="listOrderGoodsInfo"/>
+        WHERE
+        a.id = #{orderId}
+        AND a.user_id = #{userId}
+    </select>
+
+    <select id="listAdminOrderGoodsInfo" resultMap="orderGoodsInfoMap">
+        <include refid="listOrderGoodsInfo"/>
+        WHERE 1=1
+        <if test="orderNo!=null">
+            AND a.order_no LIKE CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="userName!=null">
+            AND a.user_name = #{userName}
+        </if>
+        <if test="settlementId!=null">
+            AND a.settlement_id = #{settlementId}
+        </if>
+        <if test="logisticNumber!=null">
+            AND a.logistic_number = #{logisticNumber}
+        </if>
+        <if test="startTime!=null">
+            AND a.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime!=null">
+            AND a.create_time &lt;= #{endTime}
+        </if>
+        <if test="status!=null">
+            AND a.status = #{status}
+        </if>
+    </select>
+
+    <select id="listUserBeautyGoodsInfo" resultMap="orderGoodsInfoMap">
+        <include refid="listOrderGoodsInfo"/>
+        WHERE
+        a.user_id = #{userId}
+        AND a.order_type = #{orderType}
+    </select>
+
+    <select id="listOrderByIds" resultMap="orderInfoMap">
+        SELECT id,user_id,currency_price,cny_price,if_pay,order_no FROM order_info WHERE id IN
+        <foreach collection="orderIdList" open="(" close=")" separator="," item="orderId">
+            #{orderId}
+        </foreach>
+    </select>
+
+    <select id="listUserOrderByIds" resultMap="orderInfoMap">
+        SELECT id,user_id,currency_price,cny_price,if_pay,order_no FROM order_info WHERE user_id = #{userId} AND id IN
+        <foreach collection="orderIdList" open="(" close=")" separator="," item="orderId">
+            #{orderId}
+        </foreach>
+    </select>
+
+
+</mapper>

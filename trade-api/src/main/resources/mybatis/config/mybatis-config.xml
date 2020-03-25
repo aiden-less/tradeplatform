@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <settings>
+        <!--<setting name="logImpl" value="STDOUT_LOGGING"/>-->
+        <!--<setting name="logImpl" value="NO_LOGGING"/>-->
+        <setting name="logImpl" value="SLF4J"/>
+        <!-- 在所有的SQL映射路径上加上"dao"这个前缀 -->
+        <setting name="logPrefix" value="dao."/>
+    </settings>
+    <plugins>
+        <plugin interceptor="com.converage.architecture.mybatis.interceptor.PageInterceptor">
+            <property name="sqlIdByPageRegex" value=".+ByPage$" />
+        </plugin>
+        <plugin interceptor="com.converage.architecture.mybatis.interceptor.BaseResultSetInterceptor">
+
+        </plugin>
+    </plugins>
+</configuration>

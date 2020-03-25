@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.converage.mapper.user.UserMapper">
+    <resultMap id="userMap" type="User">
+        <id property="id" column="id"></id>
+        <result property="headPictureUrl" column="head_picture_url"></result>
+        <result property="userName" column="user_name"></result>
+        <result property="userAccount" column="user_account"></result>
+        <result property="phoneNumber" column="phone_number"></result>
+        <result property="password" column="password"></result>
+        <result property="payPassword" column="pay_password"></result>
+        <result property="inviteId" column="invite_id"></result>
+        <result property="inviteCode" column="invite_code"></result>
+        <result property="wxOpenId" column="wx_open_id"></result>
+        <result property="wxNickname" column="wx_nickname"></result>
+        <result property="level" column="level"></result>
+        <result property="leaderLevel" column="leader_level"></result>
+        <result property="computePower" column="compute_power"></result>
+        <result property="currency" column="currency"></result>
+        <result property="usdt" column="usdt"></result>
+        <result property="staticCurrency" column="static_currency"></result>
+        <result property="dynamicCurrency" column="dynamic_currency"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="memberType" column="member_type"></result>
+        <result property="type" column="type"></result>
+        <result property="status" column="status"></result>
+        <result property="certStatus" column="cert_status"></result>
+        <result property="ifFreePayPwd" column="if_free_pay_pwd"></result>
+        <result property="ifCanOtc" column="if_can_otc"></result>
+        <result property="ifCanRecharge" column="if_can_recharge"></result>
+        <result property="ifCanWithdraw" column="if_can_withdraw"></result>
+        <result property="ifCanTransfer" column="if_can_transfer"></result>
+        <result property="mainNetAddr" column="main_net_addr"></result>
+    </resultMap>
+
+    <resultMap id="inviteShareProfitUserMap" type="InviteShareProfitUser">
+        <id property="id" column="id"></id>
+        <result property="inviteId" column="invite_id"></result>
+        <result property="registerTime" column="create_time"></result>
+        <result property="computeReward" column="compute_reward"></result>
+    </resultMap>
+
+    <resultMap id="userTreeNode" type="UserTreeNode">
+        <id property="id" column="id"></id>
+        <id property="inviteId" column="invite_id"></id>
+        <id property="label" column="info_list"></id>
+    </resultMap>
+
+    <resultMap id="userVoucherRecordMap" type="UserVoucherRecord">
+        <id property="id" column="id"></id>
+        <result property="quantity" column="quantity"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="unableTime" column="unable_time"></result>
+        <result property="voucherName" column="voucher_name"></result>
+        <result property="voucherType" column="voucher_type"></result>
+        <result property="description" column="description"></result>
+        <result property="shopName" column="shop_name"></result>
+        <result property="status" column="status"></result>
+    </resultMap>
+
+    <resultMap id="inviteUserMap" type="InviteUserRecord">
+        <result property="userId" column="user_id"/>
+        <result property="userAccount" column="user_account"/>
+        <result property="headImgUrl" column="head_picture_url"/>
+        <result property="registerTime" column="register_time"/>
+        <result property="inviteType" column="invite_type"/>
+        <result property="rewardValue" column="reward_value"/>
+        <result property="rewardScore" column="reward_score"/>
+    </resultMap>
+
+    <resultMap id="userMessageMap" type="UserMessage">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="type" column="type"/>
+        <result property="userName" column="user_name"/>
+        <result property="content" column="content"/>
+        <result property="extraContent" column="extra_content"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="createTime" column="create_time"/>
+        <result property="ifRead" column="if_read"/>
+        <result property="ifValid" column="if_valid"/>
+        <result property="countNotRead" column="count_not_read"/>
+    </resultMap>
+
+    <update id="updatePassword">
+      UPDATE user_info SET ${updatePWDColumn} = #{newPassword} WHERE id = #{userId}
+    </update>
+
+    <select id="listUser4InviteRecord" resultMap="userMap">
+      SELECT
+        a.id,a.user_name,a.invite_id,a.create_time,a.status AS cert_status
+      FROM user_info a LEFT JOIN user_certification b ON a.id = b.user_id
+      WHERE a.member_type = #{memberType}
+    </select>
+
+    <select id="getUserToUpdatePwd" resultMap="userMap">
+      SELECT id FROM user_info WHERE ${updatePWDColumn} = #{oldPassword} AND id = #{userId}
+    </select>
+
+
+    <select id="getUserInfo" resultMap="userMap">
+        SELECT a.id, a.user_name,a.phone_number,a.invite_code,a.create_time,a.status,a.password,
+                a.wx_nickname,a.head_picture_url,a.member_type,a.type,
+                a.pay_password,a.user_account,a.level,a.leader_level,a.if_free_pay_pwd,a.if_can_otc,
+                a.if_can_recharge,a.if_can_withdraw,a.if_can_transfer
+         FROM user_info a
+        WHERE a.id = #{userId}
+    </select>
+
+    <select id="listInviteUser" resultMap="inviteUserMap">
+        SELECT
+        a.register_time, a.reward_value,a.invite_type,a.reward_score,b.user_account, b.head_picture_url, b.`level`, a.user_id,b.user_name
+        FROM invite_user_record a
+        LEFT JOIN user_info b ON a.user_id = b.id
+        WHERE a.invite_user_id = #{userId}
+        <if test="inviteType != 0">
+            AND a.invite_type = #{inviteType}
+        </if>
+    </select>
+
+    <select id="selectInviteCountByUserId" resultType="integer">
+      SELECT ifnull(count(*), 0)
+      FROM invite_user_record a
+      WHERE a.invite_user_id = #{userId} AND a.invite_type = 1
+    </select>
+
+    <select id="listInviteUserByIds" resultMap="inviteShareProfitUserMap">
+        SELECT id,invite_id,create_time,compute_reward FROM user_info WHERE 1=1
+        <if test="userIds.size() > 0">
+            AND invite_id IN
+            <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="deleteWeixin">
+      UPDATE user_info SET wx_open_id = NULL, wx_nickname = NULL
+      WHERE id = #{id}
+    </update>
+    <update id="updateUserInfo" parameterType="User">
+        UPDATE user_info
+        <trim prefix="set" suffixOverrides=",">
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="level != null">
+                level = #{level},
+            </if>
+            <if test="leaderLevel != null">
+                leader_level = #{leaderLevel},
+            </if>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="payPassword != null">
+                pay_password = #{payPassword},
+            </if>
+            <if test="ifCanOtc != null">
+                if_can_otc = #{ifCanOtc},
+            </if>
+            <if test="ifCanRecharge != null">
+                if_can_recharge = #{ifCanRecharge},
+            </if>
+            <if test="ifCanWithdraw != null">
+                if_can_withdraw = #{ifCanWithdraw},
+            </if>
+            <if test="ifCanTransfer != null">
+                if_can_transfer = #{ifCanTransfer},
+            </if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+    <update id="updateInviteTeamId">
+        UPDATE user_info SET leader_invite_id = #{leaderUserId} WHERE id = #{registerUserId}
+    </update>
+
+    <update id="increaseComputeReward">
+        UPDATE user_info SET compute_reward = compute_reward + #{reward} WHERE id = #{userId}
+    </update>
+    <update id="updateAddress">
+        UPDATE main_net_user_addr set main_net_addr = #{toAddress} WHERE user_id = #{userId}
+    </update>
+
+    <select id="selectUerInfo" resultMap="userMap">
+        SELECT
+        a.id,
+        a.user_account,
+        a.type,
+        a. LEVEL,
+        a.leader_level,
+        a.invite_code,
+        a. STATUS,
+        a.phone_number,
+        a.create_time,
+        a.if_can_recharge,
+        a.if_can_withdraw,
+        a.if_can_transfer,
+        b.main_net_addr
+        <include refid="whereSql"/>
+        <if test="sortProp != null">
+            ORDER BY
+            ${sortProp}
+            <if test="sortType != null">
+                ${sortType}
+            </if>
+        </if>
+    </select>
+    <sql id="whereSql">
+        FROM user_info a LEFT JOIN main_net_user_addr b ON a.id = b.user_id
+        WHERE 1 = 1
+        <if test="startTime != null">
+            and a.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and a.create_time &lt;= #{endTime}
+        </if>
+        <if test="param.userAccount != null">
+            AND a.user_account LIKE CONCAT('%',#{param.userAccount},'%')
+        </if>
+        <if test="param.phoneNumber != null">
+            AND a.phone_number LIKE CONCAT('%',#{param.phoneNumber},'%')
+        </if>
+        <if test="param.type != null">
+            AND a.type = #{param.type}
+        </if>
+        <if test="param.level != null">
+            AND a.level = #{param.level}
+        </if>
+        <if test="param.status != null">
+            AND a.status = #{param.status}
+        </if>
+    </sql>
+    <select id="selectTotal" resultMap="userMap">
+        SELECT
+        IFNULL(SUM(b.currency), 0) 'currency', IFNULL(SUM(b.quota_ore), 0) 'quota_ore',
+        IFNULL(SUM(b.usdt), 0) 'usdt'
+        <include refid="whereSql"/>
+    </select>
+
+    <select id="selectFirstUser" resultMap="userMap">
+        select t.id, t.user_account, t.`status` from user_info t order by t.create_time limit 1
+    </select>
+
+    <select id="listUserNoneMiningMachine" resultMap="userMap">
+        SELECT a.id, a.create_time, a.`status`, COUNT(umm.id) AS c
+        FROM
+          user_info a
+        LEFT JOIN user_mining_machine umm ON umm.user_id = a.id
+        WHERE a.`type` != ${@com.rootkey.constance.UserConst@USER_MERCHANT_TYPE_BEING}
+        AND  a.`status` = ${@com.rootkey.constance.UserConst@USER_STATUS_NORMAL}
+        GROUP BY a.id
+        HAVING c &lt; 1
+    </select>
+
+    <select id="countRewardValue" resultType="java.math.BigDecimal">
+      SELECT
+         IFNULL(SUM(reward_value),0)
+      FROM invite_user_record a
+        LEFT JOIN user_info b ON a.user_id = b.id
+      WHERE a.invite_user_id = #{userId}
+    </select>
+
+    <select id="countRewardScore" resultType="java.math.BigDecimal">
+      SELECT
+         IFNULL(SUM(reward_score),0)
+      FROM invite_user_record a
+        LEFT JOIN user_info b ON a.user_id = b.id
+      WHERE a.invite_user_id = #{userId}
+    </select>
+
+    <select id="listUserMessage" resultMap="userMessageMap">
+        SELECT a.*,b.user_name FROM user_message a LEFT JOIN user_info b on a.user_id = b.id WHERE 1=1
+        <if test="userName !=null">
+            AND b.user_name = #{userName}
+        </if>
+    </select>
+    <select id="listAllMessage" resultMap="userMessageMap">
+        SELECT
+            a.*,(SELECT COUNT(*) FROM user_message b WHERE if_read = FALSE AND b.type = a.type AND b.user_id = #{userId}) AS count_not_read
+        FROM
+            user_message a
+        WHERE
+            user_id = #{userId}
+        GROUP BY
+            type
+        ORDER BY
+            create_time DESC
+    </select>
+    <select id="checkSendSMSSecondRate" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM
+            msg_record
+        WHERE
+            phone_number = #{phoneNumber}
+        AND msg_type = #{msgType}
+        AND if_valid = true
+        AND
+            TIMESTAMPDIFF(SECOND,create_time,NOW()) &lt; #{secondNum}
+    </select>
+
+    <select id="countDirectInviteUser" resultType="java.lang.Integer">
+        SELECT count(*) FROM user_info WHERE invite_id = #{userId}
+    </select>
+    <select id="listInviteUserByIdsStatus" resultMap="inviteShareProfitUserMap">
+        SELECT id,invite_id FROM user_info WHERE 1=1
+        <if test="status!= null">
+            AND status = #{status}
+        </if>
+        <if test="userIds.size() > 0">
+            AND invite_id IN
+            <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectUserTree" resultMap="userTreeNode">
+        SELECT id,invite_id,CONCAT("用户名：",user_account," --- ", "手机：",phone_number) AS info_list FROM user_info
+    </select>
+
+    <select id="listOldUser" resultMap="userMap">
+        SELECT * FROM `user_info` WHERE `create_time` &lt; '2019-08-30 20:22:16' ORDER BY `create_time` DESC LIMIT 0, 1000
+    </select>
+</mapper>
