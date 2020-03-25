@@ -6,7 +6,6 @@ import com.converage.architecture.utils.ResultUtils;
 import com.converage.client.RedisClient;
 import com.converage.client.netty.TradeMatchClient;
 import com.converage.constance.RedisKeyConst;
-import com.converage.service.common.AddressService;
 import com.converage.service.common.AliOSSBusiness;
 import com.converage.service.common.AppUpgradeService;
 import com.converage.service.common.GlobalConfigService;
@@ -33,8 +32,6 @@ public class AppCommonController {
     @Autowired
     private AppUpgradeService appUpgradeService;
 
-    @Autowired
-    private AddressService addressService;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -75,21 +72,10 @@ public class AppCommonController {
 
 
     /**
-     * 获取省市联动数据
-     *
-     * @param pid
-     * @return
-     */
-    @GetMapping("area/{pid}")
-    public Result<?> area(@PathVariable String pid) {
-        return ResultUtils.success(addressService.getByPid(pid));
-    }
-
-    /**
      * 获取图形验证码
      *
      * @param request
-     * @return
+     * @returnArticle
      */
     @GetMapping("vertifyPic")
     public Result<?> vertifyPic(HttpServletRequest request) {

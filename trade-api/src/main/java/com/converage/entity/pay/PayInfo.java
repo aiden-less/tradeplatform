@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 @Alias("PayInfo")
 @Table(name = "pay_info")
 public class PayInfo implements Serializable {
+    private static final long serialVersionUID = -22762641073723501L;
     @Id
     @Column(name = Id)
     private String id;

@@ -13,7 +13,6 @@ import com.converage.entity.common.AppUpgrade;
 import com.converage.entity.common.GlobalConfig;
 import com.converage.entity.user.UserNode;
 import com.converage.service.transaction.CctService;
-import com.converage.service.common.AddressService;
 import com.converage.service.common.AppUpgradeService;
 import com.converage.service.common.GlobalConfigService;
 import com.google.common.collect.ImmutableMap;
@@ -46,8 +45,6 @@ public class AdminConfigController {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    @Autowired
-    private AddressService addressService;
 
     @Autowired
     private EnvironmentUtils environmentUtils;
@@ -156,7 +153,7 @@ public class AdminConfigController {
                 }
                 break;
             case "address":
-                addressService.cache(0);
+
                 break;
         }
         return ResultUtils.success();

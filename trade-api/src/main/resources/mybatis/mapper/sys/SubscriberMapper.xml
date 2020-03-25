@@ -3,43 +3,43 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.converage.mapper.sys.SubscriberMapper">
-    <resultMap id="subscriberMap" type="Subscriber">
-        <id property="id" column="id"/>
-        <result property="userName" column="user_name"/>
-        <result property="realName" column="real_name"/>
-        <result property="password" column="password"/>
-        <result property="salt" column="salt"/>
-        <result property="departmentId" column="department_id"/>
-        <result property="workNumber" column="work_number"/>
-        <result property="createBy" column="create_by"/>
-        <result property="createTime" column="create_time"/>
-        <result property="ifValid" column="if_valid"/>
-    </resultMap>
+    <!--<resultMap id="subscriberMap" type="Subscriber">-->
+        <!--<id property="id" column="id"/>-->
+        <!--<result property="userName" column="user_name"/>-->
+        <!--<result property="realName" column="real_name"/>-->
+        <!--<result property="password" column="password"/>-->
+        <!--<result property="salt" column="salt"/>-->
+        <!--<result property="departmentId" column="department_id"/>-->
+        <!--<result property="workNumber" column="work_number"/>-->
+        <!--<result property="createBy" column="create_by"/>-->
+        <!--<result property="createTime" column="create_time"/>-->
+        <!--<result property="ifValid" column="if_valid"/>-->
+    <!--</resultMap>-->
 
-    <resultMap id="subRoleMap" type="Subscriber" extends="subscriberMap">
-        <collection property="roleIdList" ofType="string">
-            <result column="role_id"/>
-        </collection>
-    </resultMap>
-    <delete id="deleteRoles">
-        DELETE FROM sys_subscriber_role WHERE subscriber_id = #{subscriberId}
-    </delete>
+    <!--<resultMap id="subRoleMap" type="Subscriber" extends="subscriberMap">-->
+        <!--<collection property="roleIdList" ofType="string">-->
+            <!--<result column="role_id"/>-->
+        <!--</collection>-->
+    <!--</resultMap>-->
+    <!--<delete id="deleteRoles">-->
+        <!--DELETE FROM sys_subscriber_role WHERE subscriber_id = #{subscriberId}-->
+    <!--</delete>-->
 
-    <select id="selectList" resultMap="subscriberMap">
-        SELECT * FROM sys_subscriber
-    </select>
+    <!--<select id="selectList" resultMap="subscriberMap">-->
+        <!--SELECT * FROM sys_subscriber-->
+    <!--</select>-->
 
-    <select id="selectSubscriberByLogin" resultMap="subscriberMap">
-        SELECT t.id, t.user_name, t.password, t.salt  FROM sys_subscriber t where t.user_name = #{userName}
-    </select>
+    <!--<select id="selectSubscriberByLogin" resultMap="subscriberMap">-->
+        <!--SELECT t.id, t.user_name, t.password, t.salt  FROM sys_subscriber t where t.user_name = #{userName}-->
+    <!--</select>-->
 
-    <select id="listRole" resultMap="subRoleMap">
-      SELECT
-        a.id, a.user_name, a.real_name, a.if_valid, b.role_id
-      FROM sys_subscriber a
-      LEFT JOIN sys_subscriber_role b on a.id = b.subscriber_id
-      WHERE
-        a.id = #{subscriberId}
-    </select>
+    <!--<select id="listRole" resultMap="subRoleMap">-->
+      <!--SELECT-->
+        <!--a.id, a.user_name, a.real_name, a.if_valid, b.role_id-->
+      <!--FROM sys_subscriber a-->
+      <!--LEFT JOIN sys_subscriber_role b on a.id = b.subscriber_id-->
+      <!--WHERE-->
+        <!--a.id = #{subscriberId}-->
+    <!--</select>-->
 
 </mapper>

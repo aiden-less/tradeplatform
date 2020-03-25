@@ -2,44 +2,44 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.converage.mapper.currency.HuobiCurrencyMapper">
-    <resultMap id="huobiCurrencyInfoMap" type="com.converage.entity.currency.huobi.HuobiCurrencyInfo">
-        <id column="id" property="id" />
-        <result column="symbol" property="symbol" />
-        <result column="exchange_name" property="exchangeName" />
-        <result column="image" property="image" />
-        <result column="current_CNY_Price" property="currentCNYPrice" />
-        <result column="current_USD_Price" property="currentUSDPrice" />
-        <result column="price_change_percentage" property="priceChangePercentage" />
-        <result column="total_supply" property="totalSupply" />
-    </resultMap>
-    
-    <select id="selectCountByCoinId" resultType="java.lang.Integer">
-      SELECT COUNT(*) FROM huobi_currency_info WHERE symbol = #{symbol}
-    </select>
+    <!--<resultMap id="huobiCurrencyInfoMap" type="com.converage.entity.currency.huobi.HuobiCurrencyInfo">-->
+        <!--<id column="id" property="id" />-->
+        <!--<result column="symbol" property="symbol" />-->
+        <!--<result column="exchange_name" property="exchangeName" />-->
+        <!--<result column="image" property="image" />-->
+        <!--<result column="current_CNY_Price" property="currentCNYPrice" />-->
+        <!--<result column="current_USD_Price" property="currentUSDPrice" />-->
+        <!--<result column="price_change_percentage" property="priceChangePercentage" />-->
+        <!--<result column="total_supply" property="totalSupply" />-->
+    <!--</resultMap>-->
+    <!---->
+    <!--<select id="selectCountByCoinId" resultType="java.lang.Integer">-->
+      <!--SELECT COUNT(*) FROM huobi_currency_info WHERE symbol = #{symbol}-->
+    <!--</select>-->
 
-    <select id="listCurrencyInfoBySymbol" resultMap="huobiCurrencyInfoMap">
-      SELECT
-        id,
-        symbol,
-        exchange_name,
-        image,
-        current_CNY_Price,
-        current_USD_Price,
-        price_change_percentage,
-        (
-            current_USD_Price * total_supply
-        ) AS market_cap
-    FROM
-        huobi_currency_info
-    WHERE
-        symbol_pair LIKE CONCAT('%',#{symbol})
-    ORDER BY
-        market_cap DESC
-    </select>
+    <!--<select id="listCurrencyInfoBySymbol" resultMap="huobiCurrencyInfoMap">-->
+      <!--SELECT-->
+        <!--id,-->
+        <!--symbol,-->
+        <!--exchange_name,-->
+        <!--image,-->
+        <!--current_CNY_Price,-->
+        <!--current_USD_Price,-->
+        <!--price_change_percentage,-->
+        <!--(-->
+            <!--current_USD_Price * total_supply-->
+        <!--) AS market_cap-->
+    <!--FROM-->
+        <!--huobi_currency_info-->
+    <!--WHERE-->
+        <!--symbol_pair LIKE CONCAT('%',#{symbol})-->
+    <!--ORDER BY-->
+        <!--market_cap DESC-->
+    <!--</select>-->
 
-    <select id="listCurrencyInfoGroupBySymbol" resultMap="huobiCurrencyInfoMap">
-      SELECT id,symbol FROM huobi_currency_info GROUP BY symbol
-    </select>
+    <!--<select id="listCurrencyInfoGroupBySymbol" resultMap="huobiCurrencyInfoMap">-->
+      <!--SELECT id,symbol FROM huobi_currency_info GROUP BY symbol-->
+    <!--</select>-->
 
 
 </mapper>

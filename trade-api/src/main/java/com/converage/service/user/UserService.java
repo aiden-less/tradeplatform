@@ -16,10 +16,7 @@ import com.converage.service.wallet.EthService;
 import com.converage.utils.*;
 import com.converage.client.RedisClient;
 import com.converage.constance.*;
-import com.converage.entity.common.UserFreeCount;
-import com.converage.entity.common.UserInviteCodeId;
 import com.converage.entity.user.*;
-import com.converage.mapper.common.AutoIncreaseIdMapper;
 import com.converage.mapper.user.UserMapper;
 import com.converage.service.common.AliOSSBusiness;
 import com.google.common.collect.ImmutableMap;
@@ -47,9 +44,6 @@ public class UserService extends BaseService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
-
-    @Autowired
-    private AutoIncreaseIdMapper autoIncreaseIdMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -140,12 +134,7 @@ public class UserService extends BaseService {
                 registerUser.setUserName(phoneNumber.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 registerUser.setCreateTime(new Timestamp(System.currentTimeMillis()));
 
-                //生成邀请码
-                UserInviteCodeId userInviteCodeId = new UserInviteCodeId();
-                autoIncreaseIdMapper.insertUserInviteCode(userInviteCodeId);
-                String newInviteCode = RandomUtil.randomInviteCode(userInviteCodeId.getId());
 
-                registerUser.setInviteCode(newInviteCode);
                 registerUser.setStatus(UserConst.USER_STATUS_FROZEN);
                 ValueCheckUtils.notZero(insertIfNotNull(registerUser), errorMsg);
 
@@ -160,12 +149,6 @@ public class UserService extends BaseService {
                 }
 
                 ValueCheckUtils.notZero(insertBatch(userAssetList, false), errorMsg);
-
-                //增加用户每天免费次数记录
-                UserFreeCount userFreeCount = new UserFreeCount();
-                userFreeCount.setUserId(registerUserId);
-                ValueCheckUtils.notZero(insertIfNotNull(userFreeCount), errorMsg);
-
 
                 String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
                 ETHWallet ethWallet = ETHWalletUtils.generateMnemonic(WalletConst.ETH, registerUserId, walletKey + registerUserId);

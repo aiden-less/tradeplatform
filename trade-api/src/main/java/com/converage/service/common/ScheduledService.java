@@ -26,9 +26,6 @@ public class ScheduledService {
     private BaseService baseService;
 
     @Autowired
-    private UserFreeCountService userFreeCountService;
-
-    @Autowired
     private HuobiService huobiService;
 
     @Autowired

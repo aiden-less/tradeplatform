@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.converage.mapper.information.ArticleMapper">
-    <resultMap id="BaseResultMap" type="Article">
-        <id column="id" property="id" jdbcType="VARCHAR"/>
-        <result column="article_cover" property="articleCover" jdbcType="VARCHAR"/>
-        <result column="article_title" property="articleTitle" jdbcType="VARCHAR"/>
-        <result column="article_type" property="articleType" jdbcType="INTEGER"/>
-        <result column="content_type" property="contentType" jdbcType="INTEGER"/>
-        <result column="article_content" property="articleContent" jdbcType="INTEGER"/>
-        <result column="summary" property="summary" jdbcType="INTEGER"/>
-        <result column="if_valid" property="ifValid" jdbcType="BIT"/>
-        <result column="sort" property="sort" jdbcType="INTEGER"/>
-        <result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>
-        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
-        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
-    </resultMap>
-    <sql id="Base_Column_List">
-      t.id, t.article_title, t.article_type, t.if_valid, t.verify_status, t.create_by,
-      t.create_time, t.article_cover, t.content_type, t.sort, LEFT(t.`article_content`, 300) 'article_content',
-      t.summary
-    </sql>
+    <!--<resultMap id="BaseResultMap" type="Article">-->
+        <!--<id column="id" property="id" jdbcType="VARCHAR"/>-->
+        <!--<result column="article_cover" property="articleCover" jdbcType="VARCHAR"/>-->
+        <!--<result column="article_title" property="articleTitle" jdbcType="VARCHAR"/>-->
+        <!--<result column="article_type" property="articleType" jdbcType="INTEGER"/>-->
+        <!--<result column="content_type" property="contentType" jdbcType="INTEGER"/>-->
+        <!--<result column="article_content" property="articleContent" jdbcType="INTEGER"/>-->
+        <!--<result column="summary" property="summary" jdbcType="INTEGER"/>-->
+        <!--<result column="if_valid" property="ifValid" jdbcType="BIT"/>-->
+        <!--<result column="sort" property="sort" jdbcType="INTEGER"/>-->
+        <!--<result column="verify_status" property="verifyStatus" jdbcType="INTEGER"/>-->
+        <!--<result column="create_by" property="createBy" jdbcType="VARCHAR"/>-->
+        <!--<result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>-->
+    <!--</resultMap>-->
+    <!--<sql id="Base_Column_List">-->
+      <!--t.id, t.article_title, t.article_type, t.if_valid, t.verify_status, t.create_by,-->
+      <!--t.create_time, t.article_cover, t.content_type, t.sort, LEFT(t.`article_content`, 300) 'article_content',-->
+      <!--t.summary-->
+    <!--</sql>-->
 
-    <select id="selectByPage" resultMap="BaseResultMap" parameterType="com.converage.architecture.dto.Pagination">
-        select
-        <include refid="Base_Column_List"/>
-        from information_article t
-        where 1 = 1
-        <if test="startTime != null">
-            and t.create_time &gt;= #{startTime}
-        </if>
-        <if test="endTime != null">
-            and t.create_time &lt;= #{endTime}
-        </if>
-        <if test="param.ifValid != null">
-            and t.if_valid = #{param.ifValid}
-        </if>
-        <if test="param.articleType != null">
-            and t.article_type = #{param.articleType}
-        </if>
-        <if test="param.verifyStatus != null">
-            and t.verify_status = #{param.verifyStatus}
-        </if>
-        <if test="param.articleTitle != null">
-            and t.article_title = #{param.articleTitle}
-        </if>
-        ORDER BY t.sort DESC
-    </select>
+    <!--<select id="selectByPage" resultMap="BaseResultMap" parameterType="com.converage.architecture.dto.Pagination">-->
+        <!--select-->
+        <!--<include refid="Base_Column_List"/>-->
+        <!--from information_article t-->
+        <!--where 1 = 1-->
+        <!--<if test="startTime != null">-->
+            <!--and t.create_time &gt;= #{startTime}-->
+        <!--</if>-->
+        <!--<if test="endTime != null">-->
+            <!--and t.create_time &lt;= #{endTime}-->
+        <!--</if>-->
+        <!--<if test="param.ifValid != null">-->
+            <!--and t.if_valid = #{param.ifValid}-->
+        <!--</if>-->
+        <!--<if test="param.articleType != null">-->
+            <!--and t.article_type = #{param.articleType}-->
+        <!--</if>-->
+        <!--<if test="param.verifyStatus != null">-->
+            <!--and t.verify_status = #{param.verifyStatus}-->
+        <!--</if>-->
+        <!--<if test="param.articleTitle != null">-->
+            <!--and t.article_title = #{param.articleTitle}-->
+        <!--</if>-->
+        <!--ORDER BY t.sort DESC-->
+    <!--</select>-->
 
 </mapper>

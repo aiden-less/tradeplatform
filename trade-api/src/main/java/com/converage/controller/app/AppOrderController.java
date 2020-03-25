@@ -76,19 +76,6 @@ public class AppOrderController {
         return ResultUtils.success(orderService.createOrder(user, shopOrderPayReq, ORDER_TYPE_GOODS));
     }
 
-    /**
-     * 礼包订单创建
-     *
-     * @param request
-     * @param shopOrderPayReq
-     * @return
-     */
-    @RequestMapping("pack/create")
-    public Object create4Pack(HttpServletRequest request, @RequestBody ShopOrderPayReq shopOrderPayReq) throws UnsupportedEncodingException {
-        User user = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME));
-        return ResultUtils.success(orderService.createOrder(user, shopOrderPayReq, ORDER_TYPE_PACK));
-    }
-
 
     /**
      * 订单支付类型
@@ -171,50 +158,7 @@ public class AppOrderController {
         return ResultUtils.success();
     }
 
-    /**
-     * 购买矿机
-     *
-     * @param request
-     * @return
-     */
-    @PostMapping("/machine/buy")
-    public Result<?> buyMachine(HttpServletRequest request, String desKeyStr, String paramStr) throws Exception {
-        String userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-
-        ShopOrderPayReq shopOrderPayReq = JSONObject.parseObject(rsaService.decryptParam(desKeyStr, paramStr), ShopOrderPayReq.class);
-        rsaService.checkRequestTimeout(shopOrderPayReq, REQUST_TIME_OUT_SECOND);
-
-        Integer settlementId = SettlementConst.SETTLEMENT_CURRENCY;
-        String spuId = shopOrderPayReq.getSpuId();
-        Integer buyNum = shopOrderPayReq.getBuyNum();
-        String payPassword = shopOrderPayReq.getPayPassword();
 
 
-        return ResultUtils.success("购买成功");
-    }
-
-    /**
-     * 购买道具
-     *
-     * @param request
-     * @return
-     */
-    @RequestMapping("quotas/buy")
-    public Result<?> buyQuotas(HttpServletRequest request, String quotasId, Integer settlementId, Integer rateType, Integer buyNum) {
-        String userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-        return ResultUtils.success("购买成功");
-    }
-
-    /**
-     * 购买资产包
-     *
-     * @param request
-     * @return
-     */
-    @RequestMapping("assetsPack/buy")
-    public Result<?> buyAssetsPack(HttpServletRequest request, String assetsPackId, Integer settlementId, Integer buyNum) {
-        String userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-        return ResultUtils.success();
-    }
 
 }

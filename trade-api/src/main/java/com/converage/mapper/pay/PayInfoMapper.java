@@ -10,6 +10,4 @@ import org.springframework.stereotype.Repository;
 public interface PayInfoMapper {
 
 
-    Integer update(PayInfo payInfo);
-
 }

@@ -3,11 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.converage.mapper.user.CctFrozenAssetsMapper">
 
-    <resultMap id="cctFrozenAssetsMap" type="CctFrozenAssets">
-
-    </resultMap>
-
-
     <update id="increase">
         UPDATE cct_frozen_assets SET
         assets_amount = assets_amount + #{amount}

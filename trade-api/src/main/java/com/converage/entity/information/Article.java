@@ -5,7 +5,6 @@ import com.converage.architecture.mybatis.annotation.Id;
 import com.converage.architecture.mybatis.annotation.Table;
 import lombok.Data;
 import org.apache.ibatis.type.Alias;
-
 import java.io.Serializable;
 import java.sql.Timestamp;
 
@@ -13,8 +12,8 @@ import java.sql.Timestamp;
 @Alias("Article")
 @Table(name = "information_article")
 public class Article implements Serializable{
-    private static final long serialVersionUID = -5742334582756809679L;
 
+    private static final long serialVersionUID = -4258989341422006159L;
     @Id
     @Column(name = Id)
     private String id;

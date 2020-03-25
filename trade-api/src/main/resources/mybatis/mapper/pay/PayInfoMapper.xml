@@ -3,21 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.converage.mapper.pay.PayInfoMapper">
 
-    <update id="update" parameterType="PayInfo">
-        UPDATE pay_info
-          <set>
-              <if test="bankName != null">
-                  bank_name = #{bankName}
-              </if>
-              <if test="bankName != null">
-                  bank_name = #{bankName}
-              </if>
-              <if test="qrcode != null">
-                  number = #{qrcode}
-              </if>
-          </set>
-        WHERE user_id = #{userId}
-    </update>
 
 
 </mapper>
