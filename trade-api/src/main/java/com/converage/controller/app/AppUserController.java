@@ -37,8 +37,6 @@ public class AppUserController {
     @Autowired
     private RSAService rsaService;
 
-    @Autowired
-    private UserUpgradeService upgradeService;
 
     @RequestMapping("msg/send")
     public Result<?> sendMsg4register(HttpServletRequest request, User userReq) throws BusinessException, UnsupportedEncodingException {

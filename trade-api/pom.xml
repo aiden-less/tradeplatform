@@ -183,6 +183,21 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.briandilley.jsonrpc4j</groupId>
+            <artifactId>jsonrpc4j</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/wf.bitcoin/JavaBitcoindRpcClient -->
+        <dependency>
+            <groupId>wf.bitcoin</groupId>
+            <artifactId>JavaBitcoindRpcClient</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
+
+        <dependency>
             <groupId>cn.jpush.api</groupId>
             <artifactId>jpush-client</artifactId>
             <version>3.3.10</version>

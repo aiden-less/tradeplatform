@@ -1,5 +1,7 @@
 package com.converage.entity;
 
+import com.converage.jdbc.annotation.Column;
+import com.converage.jdbc.annotation.Id;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -9,8 +11,9 @@ import java.math.BigDecimal;
  * Created by 旺旺 on 2020/3/24.
  */
 @Data
-public class TradePairNews implements Serializable{
+public class TradePairNews implements Serializable {
     private static final long serialVersionUID = -3585498987200907699L;
+
     private String tradePairId;
     private String tradeCoinId; //交易币种Id
     private String tradeCoinName; //交易币种名

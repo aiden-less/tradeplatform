@@ -165,63 +165,6 @@ public class AdminUserController {
 
 
 
-
-    /**
-     * 节点(商家)申请 列表
-     */
-    @GetMapping("listMerchantApply")
-    public Result<?> listMerchantApply(Pagination pagination, String fullName, String telephone,
-                                       String merchantRulerId, Integer state, Integer investType) {
-        HashMap<String, Object> whereMap = Maps.newHashMap();
-        if (investType != null) {
-            whereMap.put(UserMerchantApply.Invest_type + " = ", investType);
-        }
-        if (StringUtils.isNotBlank(fullName)) {
-            whereMap.put(UserMerchantApply.Full_name + " = ", fullName);
-        }
-        if (StringUtils.isNotBlank(telephone)) {
-            whereMap.put(UserMerchantApply.Telephone + " = ", telephone);
-        }
-        if (StringUtils.isNotBlank(merchantRulerId)) {
-            whereMap.put(UserMerchantApply.Merchant_ruler_id + " = ", merchantRulerId);
-        }
-        if (state != null) {
-            whereMap.put(UserMerchantApply.State + " = ", state);
-        }
-        Map<String, Object> orderMap = ImmutableMap.of(UserMerchantApply.Create_time, CommonConst.MYSQL_DESC);
-        return ResultUtils.success(baseService.selectListByWhereMap(whereMap, pagination, UserMerchantApply.class, orderMap),
-                pagination.getTotalRecordNumber());
-    }
-
-    /**
-     * 节点(商家)申请 更新状态
-     */
-    @GetMapping("updateMerchantApply")
-    public Result<?> updateMerchantApply(String id, int state) {
-        UserMerchantApply userMerchantApply = new UserMerchantApply();
-        userMerchantApply.setId(id);
-        userMerchantApply.setState(state);
-        int result = baseService.updateIfNotNull(userMerchantApply);
-        return result > 0 ? ResultUtils.success() : ResultUtils.error("操作失败");
-    }
-
-    /**
-     * 银行卡提现 列表
-     */
-    @PostMapping("listBankWithdraw")
-    public Result<?> listBankWithdraw(@RequestBody Pagination<BankWithdraw> pagination) {
-        return ResultUtils.success(bankCardService.listBankWithdraw(pagination), pagination.getTotalRecordNumber());
-    }
-
-    /**
-     * 银行卡提现 更新状态
-     */
-    @GetMapping("updateBankWithdraw")
-    public Result<?> updateBankWithdraw(String id, int state) {
-        bankCardService.updateBankWithdraw(id, state);
-        return ResultUtils.success();
-    }
-
 //    /**
 //     * 充提转列表
 //     */
@@ -264,54 +207,37 @@ public class AdminUserController {
         return ResultUtils.success("充值成功");
     }
 
-    /**
-     * 充值礼包
-     *
-     * @param userId
-     * @return
-     */
-    @PostMapping("machine/recharge")
-    public Result<?> rechargeMachine(HttpServletRequest request, String userId, String machineId) throws UnsupportedEncodingException {
-        Subscriber subscriber = JwtUtils.getAdminByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME));
-        String userName = subscriber.getUserName();
-        if (!Objects.equals(subscriber.getId(), "1")) {
-            ResultUtils.error("权限不足");
-        }
-        rechargeService.rechargeMachine(userName, userId, machineId);
-        return ResultUtils.success("充值成功");
-    }
 
-
-    /**
-     * 导出 用户列表
-     */
-    @PostMapping("export/user")
-    public void exportUser(@RequestBody Pagination<User> pagination, HttpServletResponse response) {
-        pagination.setPageSize(ExportUtils.SHEET_MAX_MEMORY_ROW_SIZE);
-        ExportUtils.ExportDataSource<User> dataSource = new ExportUtils.ExportDataSource<User>() {
-            List<User> result = null;
-
-            public List<User> load(int pageNo, int pageSize) {
-                return userService.selectUerInfo(pagination).getList();
-            }
-
-            public String[] getColumnTitles() {
-                return new String[]{"用户名", "用户类型", "用户等级", "邀请码", "状态", "手机号码", "TC", "USDT", "TCNY", "创建时间"};
-            }
-
-            public long count() {
-                return result.size();
-            }
-
-            public Object[] convert(User user) {
-                return new Object[]{user.getUserAccount(), UserConst.getUserType(user.getType()), UserConst.getUserLevel(user.getLevel()),
-                        user.getInviteCode(), UserConst.getUserStatus(user.getStatus()), user.getPhoneNumber(), user.getCurrency(),
-                        user.getUsdt(), user.getIntegral(), user.getCreateTime()
-                };
-            }
-        };
-        ExportUtils.exportToExcel07(response, "用户列表.xlsx", dataSource);
-    }
+//    /**
+//     * 导出 用户列表
+//     */
+//    @PostMapping("export/user")
+//    public void exportUser(@RequestBody Pagination<User> pagination, HttpServletResponse response) {
+//        pagination.setPageSize(ExportUtils.SHEET_MAX_MEMORY_ROW_SIZE);
+//        ExportUtils.ExportDataSource<User> dataSource = new ExportUtils.ExportDataSource<User>() {
+//            List<User> result = null;
+//
+//            public List<User> load(int pageNo, int pageSize) {
+//                return userService.selectUerInfo(pagination).getList();
+//            }
+//
+//            public String[] getColumnTitles() {
+//                return new String[]{"用户名", "用户类型", "用户等级", "邀请码", "状态", "手机号码", "TC", "USDT", "TCNY", "创建时间"};
+//            }
+//
+//            public long count() {
+//                return result.size();
+//            }
+//
+//            public Object[] convert(User user) {
+//                return new Object[]{user.getUserAccount(), UserConst.getUserType(user.getType()), UserConst.getUserLevel(user.getLevel()),
+//                        user.getInviteCode(), UserConst.getUserStatus(user.getStatus()), user.getPhoneNumber(), user.getCurrency(),
+//                         user.getCreateTime()
+//                };
+//            }
+//        };
+//        ExportUtils.exportToExcel07(response, "用户列表.xlsx", dataSource);
+//    }
 
 //    /**
 //     * 导出 充提转

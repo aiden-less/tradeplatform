@@ -1,7 +1,9 @@
 package com.converage.service.wallet;
 
+import com.converage.entity.chain.WalletConfig;
+import com.converage.entity.wallet.WalletAccount;
+import com.converage.init.WalletConfigInit;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.converage.architecture.dto.TasteFilePathConfig;
 import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
@@ -87,10 +89,16 @@ public class EthService extends BaseService {
     private static Web3j web3j;
 
     static {
-        web3j = Web3j.build(new HttpService(WalletConst.ETH_MAIN_NET));
+        String host = WalletConfigInit.map.get(WalletConfig.ETH).getHost();
+        web3j = Web3j.build(new HttpService(host));
+    }
+
+    public WalletAccount createAccount(String walletName, String fileName, String pwd) {
+        return ETHWalletUtils.generateMnemonic(walletName, fileName, pwd);
     }
 
 
+    //以太坊转账
     public EthSendTransaction sendEthTransaction(String fromAddress, String toAddress, BigDecimal amount, String privateKey) throws ExecutionException, InterruptedException, IOException {
         Credentials credentials = Credentials.create(privateKey);
 
@@ -119,7 +127,7 @@ public class EthService extends BaseService {
         return ethSendTransaction;
     }
 
-
+    //以太坊代币转账
     public EthSendTransaction sendEthTokenTransaction(String fromAddress, String toAddress, String contractAddress, BigDecimal amount, String privateKey) throws ExecutionException, InterruptedException, IOException {
         Credentials credentials = Credentials.create(privateKey);
 
@@ -175,7 +183,7 @@ public class EthService extends BaseService {
         return request.send();
     }
 
-
+    //同步区块
     public void syncEthBlock() throws IOException {
         System.out.println("syncEthBlock" + new Date());
         environmentUtils.checkIfPro();
@@ -186,7 +194,7 @@ public class EthService extends BaseService {
         EthBlockNumber ethBlockNumber = ethBlockNumberRequest.send();
         BigInteger freshBlockNumber = ethBlockNumber.getBlockNumber();
 
-        MainNetInfo mainNetInfo = selectOneByWhereString(MainNetInfo.Net_name + "=", WalletConst.ETH, MainNetInfo.class);
+        MainNetInfo mainNetInfo = selectOneByWhereString(MainNetInfo.Net_name + "=", WalletConfig.ETH, MainNetInfo.class);
         if (mainNetInfo == null) {
             return;
         }
@@ -477,7 +485,7 @@ public class EthService extends BaseService {
                 continue;
             }
 
-            String walletName = WalletConst.ETH;
+            String walletName = WalletConfig.ETH;
             String filePath = TasteFilePathConfig.walletEthFolder + "/" + walletName + "/" + "keystore_" + userId + ".json";
             String keyStore = null;
             try {
@@ -544,7 +552,7 @@ public class EthService extends BaseService {
                 continue;
             }
 
-            String walletName = WalletConst.ETH;
+            String walletName = WalletConfig.ETH;
             String filePath = TasteFilePathConfig.walletEthFolder + "/" + walletName + "/" + "keystore_" + userId + ".json";
 
             String keyStore = null;
@@ -581,7 +589,7 @@ public class EthService extends BaseService {
         ValueCheckUtils.notEmptyString(address, "钱包地址异常");
         ValueCheckUtils.notEmptyString(contractAddress, "合约地址异常");
         String DATA_PREFIX = "0x70a08231000000000000000000000000";
-        String value = Admin.build(new HttpService(WalletConst.ETH_MAIN_NET))
+        String value = Admin.build(new HttpService(WalletConfig.ETH))
                 .ethCall(org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(address,
                         contractAddress, DATA_PREFIX + address.substring(2)), DefaultBlockParameterName.PENDING).send().getValue();
         String s = new BigInteger(value.substring(2), 16).toString();

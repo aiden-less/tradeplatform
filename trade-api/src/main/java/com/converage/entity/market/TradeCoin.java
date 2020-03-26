@@ -31,6 +31,9 @@ public class TradeCoin implements Serializable {
     @Column(name = Coin_desc)
     private String coinDesc;
 
+    @Column(name = If_valuation)
+    private Boolean ifValuation; //是否计价币种
+
     @Column(name = Main_net_id)
     private String mainNetId; //主网id
 
@@ -99,6 +102,7 @@ public class TradeCoin implements Serializable {
 
     public static final String Id = "id";
     public static final String Settlement_id = "settlement_id";
+    public static final String If_valuation = "If_valuation";
     public static final String Coin_name = "coin_name";
     public static final String Coin_desc = "coin_desc";
     public static final String Main_net_id = "main_net_id";

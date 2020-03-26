@@ -6,7 +6,6 @@ import com.converage.architecture.mybatis.annotation.Column;
 import com.converage.architecture.mybatis.annotation.Id;
 import com.converage.architecture.mybatis.annotation.Table;
 import com.converage.entity.user.MsgRecord;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;

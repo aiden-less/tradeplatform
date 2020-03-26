@@ -1,8 +1,8 @@
 package com.converage.utils.eth;
 
+import com.converage.entity.wallet.WalletAccount;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.converage.architecture.dto.TasteFilePathConfig;
-import com.converage.entity.wallet.ETHWallet;
 import com.converage.service.assets.WalletService;
 import com.converage.utils.MD5Utils;
 import com.converage.utils.SecureRandomUtils;
@@ -45,7 +45,7 @@ public class ETHWalletUtils {
      * @param pwd
      * @return
      */
-    public static ETHWallet generateMnemonic(String walletName, String fileName, String pwd) {
+    public static WalletAccount generateMnemonic(String walletName, String fileName, String pwd) {
         String[] pathArray = ETH_JAXX_TYPE.split("/");
         String passphrase = "";
         long creationTimeSeconds = System.currentTimeMillis() / 1000;
@@ -62,7 +62,7 @@ public class ETHWalletUtils {
      * @param pwd  密码
      * @return
      */
-    public static ETHWallet importMnemonic(String path, List<String> list, String fileName, String pwd) {
+    public static WalletAccount importMnemonic(String path, List<String> list, String fileName, String pwd) {
         if (!path.startsWith("m") && !path.startsWith("M")) {
             //参数非法
             return null;
@@ -135,7 +135,7 @@ public class ETHWalletUtils {
      * @param pwd        密码
      * @return
      */
-    public static ETHWallet generateWalletByMnemonic(String walletName, DeterministicSeed ds, String[] pathArray, String fileName, String pwd) {
+    public static WalletAccount generateWalletByMnemonic(String walletName, DeterministicSeed ds, String[] pathArray, String fileName, String pwd) {
         //种子
         byte[] seedBytes = ds.getSeedBytes();
 //        System.out.println(Arrays.toString(seedBytes));
@@ -161,11 +161,11 @@ public class ETHWalletUtils {
         }
 
         ECKeyPair keyPair = ECKeyPair.create(dkKey.getPrivKeyBytes());
-        ETHWallet ethWallet = generateWallet(walletName, fileName, pwd, keyPair);
-        if (ethWallet != null) {
-            ethWallet.setMnemonic(convertMnemonicList(mnemonic));
+        WalletAccount walletAccount = generateWallet(walletName, fileName, pwd, keyPair);
+        if (walletAccount != null) {
+            walletAccount.setMnemonic(convertMnemonicList(mnemonic));
         }
-        return ethWallet;
+        return walletAccount;
     }
 
     private static String convertMnemonicList(List<String> mnemonics) {
@@ -183,7 +183,7 @@ public class ETHWalletUtils {
     }
 
 
-    private static ETHWallet generateWallet(String walletName, String fileName, String pwd, ECKeyPair ecKeyPair) {
+    private static WalletAccount generateWallet(String walletName, String fileName, String pwd, ECKeyPair ecKeyPair) {
         WalletFile keyStoreFile;
         try {
             keyStoreFile = Wallet.create(pwd, ecKeyPair, 1024, 1); // WalletUtils. .generateNewWalletFile();
@@ -214,14 +214,14 @@ public class ETHWalletUtils {
             e.printStackTrace();
             return null;
         }
-        ETHWallet ethWallet = new ETHWallet();
-        ethWallet.setName(walletName);
-        ethWallet.setAddress(Keys.toChecksumAddress(keyStoreFile.getAddress()));
-        ethWallet.setKeystorePath(destination.getAbsolutePath());
-        ethWallet.setPassword(MD5Utils.MD5Encode(pwd));
-        ethWallet.setPublicKey(publicKeyStr);
-        ethWallet.setPrivateKey(privateKeyStr);
-        return ethWallet;
+        WalletAccount walletAccount = new WalletAccount();
+        walletAccount.setName(walletName);
+        walletAccount.setAddress(Keys.toChecksumAddress(keyStoreFile.getAddress()));
+        walletAccount.setKeystorePath(destination.getAbsolutePath());
+        walletAccount.setPassword(MD5Utils.MD5Encode(pwd));
+        walletAccount.setPublicKey(publicKeyStr);
+        walletAccount.setPrivateKey(privateKeyStr);
+        return walletAccount;
     }
 
 
@@ -255,7 +255,7 @@ public class ETHWalletUtils {
      * @param pwd      json文件密码
      * @return
      */
-    public static ETHWallet loadWalletByKeystore(String keystore, String fileName, String pwd) {
+    public static WalletAccount loadWalletByKeystore(String keystore, String fileName, String pwd) {
         Credentials credentials = null;
         try {
             WalletFile walletFile = null;
@@ -284,7 +284,7 @@ public class ETHWalletUtils {
      * @param pwd
      * @return
      */
-    public static ETHWallet loadWalletByPrivateKey(String privateKey, String fileName, String pwd) {
+    public static WalletAccount loadWalletByPrivateKey(String privateKey, String fileName, String pwd) {
         Credentials credentials = null;
         ECKeyPair ecKeyPair = ECKeyPair.create(Numeric.toBigInt(privateKey));
         return generateWallet(generateNewWalletName(), fileName, pwd, ecKeyPair);
@@ -313,21 +313,21 @@ public class ETHWalletUtils {
      * @param newPassword
      * @return
      */
-    public static ETHWallet modifyPassword(long walletId, String walletName, String oldPassword, String newPassword) {
-        ETHWallet ethWallet = walletService.selectOneById(walletId, ETHWallet.class);
+    public static WalletAccount modifyPassword(long walletId, String walletName, String oldPassword, String newPassword) {
+        WalletAccount walletAccount = walletService.selectOneById(walletId, WalletAccount.class);
         Credentials credentials = null;
         ECKeyPair keypair = null;
         try {
-            credentials = WalletUtils.loadCredentials(oldPassword, ethWallet.getKeystorePath());
+            credentials = WalletUtils.loadCredentials(oldPassword, walletAccount.getKeystorePath());
             keypair = credentials.getEcKeyPair();
             File destinationDirectory = new File("", "keystore_" + walletName + ".json");
             WalletUtils.generateWalletFile(newPassword, keypair, destinationDirectory, true);
-            ethWallet.setPassword(newPassword);
-            walletService.update(ethWallet);
+            walletAccount.setPassword(newPassword);
+            walletService.update(walletAccount);
         } catch (CipherException | IOException e) {
             e.printStackTrace();
         }
-        return ethWallet;
+        return walletAccount;
     }
 
     /**
@@ -338,12 +338,12 @@ public class ETHWalletUtils {
      * @return
      */
     public static String derivePrivateKey(long walletId, String pwd) {
-        ETHWallet ethWallet = walletService.selectOneById(walletId, ETHWallet.class);
+        WalletAccount walletAccount = walletService.selectOneById(walletId, WalletAccount.class);
         Credentials credentials;
         ECKeyPair keypair;
         String privateKey = null;
         try {
-            credentials = WalletUtils.loadCredentials(pwd, ethWallet.getKeystorePath());
+            credentials = WalletUtils.loadCredentials(pwd, walletAccount.getKeystorePath());
             keypair = credentials.getEcKeyPair();
             privateKey = Numeric.toHexStringNoPrefixZeroPadded(keypair.getPrivateKey(), Keys.PRIVATE_KEY_LENGTH_IN_HEX);
         } catch (CipherException | IOException e) {
@@ -360,11 +360,11 @@ public class ETHWalletUtils {
      * @return
      */
     public static String deriveKeystore(long walletId, String pwd) {
-        ETHWallet ethWallet = walletService.selectOneById(walletId, ETHWallet.class);
+        WalletAccount walletAccount = walletService.selectOneById(walletId, WalletAccount.class);
         String keystore = null;
         WalletFile walletFile;
         try {
-            walletFile = objectMapper.readValue(new File(ethWallet.getKeystorePath()), WalletFile.class);
+            walletFile = objectMapper.readValue(new File(walletAccount.getKeystorePath()), WalletFile.class);
             keystore = objectMapper.writeValueAsString(walletFile);
         } catch (IOException e) {
             e.printStackTrace();
@@ -379,9 +379,9 @@ public class ETHWalletUtils {
      * @return
      */
     public static boolean deleteWallet(long walletId) {
-        ETHWallet ethWallet = walletService.selectOneById(walletId, ETHWallet.class);
-        if (deleteFile(ethWallet.getKeystorePath())) {
-            walletService.delete(ethWallet);
+        WalletAccount walletAccount = walletService.selectOneById(walletId, WalletAccount.class);
+        if (deleteFile(walletAccount.getKeystorePath())) {
+            walletService.delete(walletAccount);
             return true;
         } else {
             return false;

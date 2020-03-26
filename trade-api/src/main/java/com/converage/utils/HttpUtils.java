@@ -69,10 +69,10 @@ public class HttpUtils {
      * @return
      * @throws Exception
      */
-    public static HttpResponse doPost(String host, String path, String method,
+    public static HttpResponse doPost(String host, String path,
                                       Map<String, String> headers,
                                       Map<String, String> querys,
-                                      Map<String, String> bodys)
+                                      Map<String, Object> bodys)
             throws Exception {
         HttpClient httpClient = wrapClient(host);
 
@@ -85,7 +85,7 @@ public class HttpUtils {
             List<NameValuePair> nameValuePairList = new ArrayList<NameValuePair>();
 
             for (String key : bodys.keySet()) {
-                nameValuePairList.add(new BasicNameValuePair(key, bodys.get(key)));
+                nameValuePairList.add(new BasicNameValuePair(key, bodys.get(key).toString()));
             }
             UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(nameValuePairList, "utf-8");
             formEntity.setContentType("application/x-www-form-urlencoded; charset=UTF-8");
@@ -107,7 +107,7 @@ public class HttpUtils {
      * @return
      * @throws Exception
      */
-    public static HttpResponse doPost(String host, String path, String method,
+    public static HttpResponse doPost(String host, String path,
                                       Map<String, String> headers,
                                       Map<String, String> querys,
                                       String body)
@@ -131,14 +131,13 @@ public class HttpUtils {
      *
      * @param host
      * @param path
-     * @param method
      * @param headers
      * @param querys
      * @param body
      * @return
      * @throws Exception
      */
-    public static HttpResponse doPost(String host, String path, String method,
+    public static HttpResponse doPost(String host, String path,
                                       Map<String, String> headers,
                                       Map<String, String> querys,
                                       byte[] body)
@@ -159,6 +158,7 @@ public class HttpUtils {
 
     /**
      * Put String
+     *
      * @param host
      * @param path
      * @param method
@@ -189,6 +189,7 @@ public class HttpUtils {
 
     /**
      * Put stream
+     *
      * @param host
      * @param path
      * @param method
@@ -289,14 +290,16 @@ public class HttpUtils {
                 public X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
+
                 public void checkClientTrusted(X509Certificate[] xcs, String str) {
 
                 }
+
                 public void checkServerTrusted(X509Certificate[] xcs, String str) {
 
                 }
             };
-            ctx.init(null, new TrustManager[] { tm }, null);
+            ctx.init(null, new TrustManager[]{tm}, null);
             SSLSocketFactory ssf = new SSLSocketFactory(ctx);
             ssf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
             ClientConnectionManager ccm = httpClient.getConnectionManager();

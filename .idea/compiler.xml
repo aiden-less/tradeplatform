@@ -7,12 +7,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="demo" />
         <module name="trade-api" />
         <module name="trade-common" />
         <module name="trade-match" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="demo" target="1.8" />
       <module name="trade-api" target="1.8" />
       <module name="trade-common" target="1.8" />
       <module name="trade-match" target="1.8" />

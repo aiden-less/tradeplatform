@@ -8,9 +8,8 @@ import com.converage.architecture.service.BaseService;
 import com.converage.architecture.utils.JwtUtils;
 import com.converage.entity.assets.CctAssets;
 import com.converage.entity.chain.MainNetInfo;
-import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.market.TradeCoin;
-import com.converage.entity.wallet.ETHWallet;
+import com.converage.entity.wallet.WalletAccount;
 import com.converage.service.common.GlobalConfigService;
 import com.converage.service.wallet.EthService;
 import com.converage.utils.*;
@@ -28,12 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
+
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 
 import static com.converage.constance.SettlementConst.*;
-import static com.converage.constance.UserConst.USER_CERT_STATUS_NONE;
 
 @Slf4j
 @Service
@@ -63,8 +62,6 @@ public class UserService extends BaseService {
     @Autowired
     private GlobalConfigService globalConfigService;
 
-    @Autowired
-    private UserUpgradeService userUpgradeService;
 
     @Autowired
     private EthService ethService;
@@ -115,11 +112,6 @@ public class UserService extends BaseService {
         registerUser.setPassword(MD5Utils.MD5Encode(password));
         String inviteCode = paramUser.getInviteCode();
 
-        ValueCheckUtils.notEmpty(inviteCode, "请输入邀请码");
-
-        User inviteUser = selectOneByWhereString(User.Invite_code + "=", inviteCode, User.class);
-        ValueCheckUtils.notEmpty(inviteUser, "邀请码有误");
-
         List<MainNetInfo> mainNetInfoList = selectAll(MainNetInfo.class);
 
         List<TradeCoin> tradeCoinList = selectAll(TradeCoin.class);
@@ -127,9 +119,7 @@ public class UserService extends BaseService {
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                if (validateFlag) {
-                    userSendService.cancelMsgCode(userSendService.validateMsgCode(phoneNumber, msgCode, UserConst.MSG_CODE_TYPE_INVITEREGISTER));
-                }
+                userSendService.cancelMsgCode(userSendService.validateMsgCode(phoneNumber, msgCode, UserConst.MSG_CODE_TYPE_INVITEREGISTER));
 
                 registerUser.setUserName(phoneNumber.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 registerUser.setCreateTime(new Timestamp(System.currentTimeMillis()));
@@ -151,16 +141,18 @@ public class UserService extends BaseService {
                 ValueCheckUtils.notZero(insertBatch(userAssetList, false), errorMsg);
 
                 String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
-                ETHWallet ethWallet = ETHWalletUtils.generateMnemonic(WalletConst.ETH, registerUserId, walletKey + registerUserId);
-                String toAddress = ethWallet.getAddress();
-
-                for (MainNetInfo mainNetInfo : mainNetInfoList) {
-                    MainNetUserAddr mainNetUserAddr = new MainNetUserAddr();
-                    mainNetUserAddr.setMainNetId(mainNetInfo.getId());
-                    mainNetUserAddr.setUserId(registerUserId);
-                    mainNetUserAddr.setMainNetAddr(toAddress);
-                    ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
-                }
+                WalletAccount walletAccount = ETHWalletUtils.generateMnemonic(WalletConst.ETH, registerUserId, walletKey + registerUserId);
+//                String toAddress = walletAccount.getAddress();
+//                String privateKey = walletAccount.getPrivateKey();
+//
+//                for (MainNetInfo mainNetInfo : mainNetInfoList) {
+//                    MainNetUserAddr mainNetUserAddr = new MainNetUserAddr();
+//                    mainNetUserAddr.setMainNetId(mainNetInfo.getId());
+//                    mainNetUserAddr.setUserId(registerUserId);
+//                    mainNetUserAddr.setMainNetAddr(toAddress);
+//                    mainNetUserAddr.setMainNetKey(privateKey);
+//                    ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
+//                }
             }
         });
 
@@ -270,24 +262,13 @@ public class UserService extends BaseService {
             certificationPo = certificationList.get(0);
         }
 
-        if (certificationPo != null) {
-            user.setCertStatus(certificationPo.getStatus());
-            user.setCertFailMsg(certificationPo.getFailReason());
-        } else {
-            user.setCertStatus(USER_CERT_STATUS_NONE);
-        }
-
 
         BigDecimal decimal1 = userAssetsService.getAssetsAmountBySettlementId(userId, SETTLEMENT_STATIC_CURRENCY);
         BigDecimal decimal2 = userAssetsService.getAssetsAmountBySettlementId(userId, SETTLEMENT_DYNAMIC_CURRENCY);
 
         BigDecimal computePower = decimal1.add(decimal2);
 
-        user.setComputePower(computePower.setScale(2, BigDecimal.ROUND_UP));
 
-        if (user.getCertStatus() == null) {
-            user.setCertStatus(0);
-        }
         if (StringUtils.isEmpty(user.getPayPassword())) {
             user.setIfSettlePayPwd(false);
         } else {
@@ -296,8 +277,6 @@ public class UserService extends BaseService {
         user.setPassword("");
         user.setPayPassword("");
 
-        UserNode userNodes = CacheUtils.getUserNodeMap(user.getLevel() + 1);
-        user.setIfUpgrade(userUpgradeService.validateIfUpgrade(user, userNodes));
         return user;
     }
 
@@ -305,8 +284,6 @@ public class UserService extends BaseService {
     public User getById(String userId) {
         return userService.selectOneById(userId, User.class);
     }
-
-
 
 
     /**
@@ -351,7 +328,6 @@ public class UserService extends BaseService {
             }
         }
     }
-
 
 
 }

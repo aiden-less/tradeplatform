@@ -98,7 +98,7 @@ public class UserSendService extends BaseService {
                 break;
             case UserConst.MSG_CODE_TYPE_BINGD_PHONE:
                 user = userService.selectOneByWhereString(User.Phone_number + " = ", phoneNumber, User.class);
-                if (user != null && StringUtils.isNotBlank(user.getWxOpenId())) {
+                if (user != null) {
                     throw new BusinessException("该手机号码已经绑定其它账号");
                 }
                 msgTypeStr = "【绑定手机号码】";
@@ -128,16 +128,6 @@ public class UserSendService extends BaseService {
 //                }
                 msgTypeStr = "【更改手机号码】";
                 break;
-            case UserConst.MSG_CODE_TYPE_BIND_BANK:
-                userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-                phoneNumber = userService.getById(userId).getPhoneNumber();
-                msgTypeStr = "【绑定银行卡】";
-                break;
-            case UserConst.MSG_CODE_TYPE_BANK_WITHDRAW:
-                userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-                phoneNumber = userService.getById(userId).getPhoneNumber();
-                msgTypeStr = "【银行卡提现】";
-                break;
         }
 
         Map<String, String> smsSendCountMap = CacheUtils.smsSendCountMap;
@@ -147,9 +137,7 @@ public class UserSendService extends BaseService {
         wjSmsService.sendSms(userReq.getPhoneNumber(), content);
         MsgRecord msgRecord = new MsgRecord(userId, phoneNumber, msgCode, msgType, new Timestamp(System.currentTimeMillis()), true);
 
-
         ValueCheckUtils.notEmpty(insertIfNotNull(msgRecord), "发送短信验证码失败");
-
 
         return msgCode;
     }

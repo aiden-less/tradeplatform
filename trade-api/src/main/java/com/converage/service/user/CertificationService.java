@@ -182,10 +182,7 @@ public class CertificationService extends BaseService {
 
                 Map<String, Object> map = ImmutableMap.of(
                         User.Id, user.getId(),
-                        User.Invite_id, user.getInviteId(),
-                        User.Type, user.getType(),
-                        User.Level, user.getLevel(),
-                        User.Leader_level, user.getLeaderLevel()
+                        User.Invite_id, user.getInviteId()
                 );
                 redisClient.put(RedisKeyConst.ALL_USER_SAMPLE_INFO, user.getId(), map);
             }
