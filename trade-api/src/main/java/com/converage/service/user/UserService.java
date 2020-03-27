@@ -8,6 +8,7 @@ import com.converage.architecture.service.BaseService;
 import com.converage.architecture.utils.JwtUtils;
 import com.converage.entity.assets.CctAssets;
 import com.converage.entity.chain.MainNetInfo;
+import com.converage.entity.chain.WalletConfig;
 import com.converage.entity.market.TradeCoin;
 import com.converage.entity.wallet.WalletAccount;
 import com.converage.service.common.GlobalConfigService;
@@ -141,7 +142,7 @@ public class UserService extends BaseService {
                 ValueCheckUtils.notZero(insertBatch(userAssetList, false), errorMsg);
 
                 String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
-                WalletAccount walletAccount = ETHWalletUtils.generateMnemonic(WalletConst.ETH, registerUserId, walletKey + registerUserId);
+                WalletAccount walletAccount = ETHWalletUtils.generateMnemonic(WalletConfig.ETH, registerUserId, walletKey + registerUserId);
 //                String toAddress = walletAccount.getAddress();
 //                String privateKey = walletAccount.getPrivateKey();
 //

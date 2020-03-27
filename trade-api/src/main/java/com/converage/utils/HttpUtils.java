@@ -32,6 +32,23 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
 public class HttpUtils {
+
+    /**
+     * get
+     *
+     * @param host
+     * @return
+     * @throws Exception
+     */
+    public static HttpResponse doGet(String host)
+            throws Exception {
+        HttpClient httpClient = wrapClient(host);
+
+        HttpGet request = new HttpGet(buildUrl(host, "", null));
+
+        return httpClient.execute(request);
+    }
+
     /**
      * get
      *

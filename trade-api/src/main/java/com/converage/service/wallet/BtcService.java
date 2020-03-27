@@ -9,13 +9,22 @@ import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.chain.WalletConfig;
 import com.converage.init.WalletConfigInit;
 import com.converage.utils.HttpUtils;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
+import org.bouncycastle.util.encoders.Hex;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -26,6 +35,7 @@ import java.util.*;
 @Slf4j
 public class BtcService extends BaseService {
 
+    private static final String mainAddress = "xxx";//手续费地址
     private final static String RESULT = "result";
     private final static String METHOD_SEND_TO_ADDRESS = "sendtoaddress";
     private final static String METHOD_GET_BLOCK = "getblock";
@@ -34,10 +44,13 @@ public class BtcService extends BaseService {
     private final static String METHOD_GET_BLOCK_COUNT = "getblockcount";
     private final static String METHOD_NEW_ADDRESS = "getnewaddress";
     private final static String METHOD_GET_BALANCE = "getbalance";
+    private final static String METHOD_GET_LISTUNSPENT = "listunspent";
+    private final static String DUMP_PRIVATE = "dumpprivkey";
     private final static int MIN_CONFIRMATION = 6;
 
-    //前四个参数在BTC钱包conf文件中设置
-    //钱包密码PASSWORD打开钱包后设置的密码
+    //正式网络usdt=31，测试网络可以用2
+    private static final int propertyid = 2;
+    public Boolean isMainNet = false;
 
     /***
      * 取得钱包相关信息
@@ -86,25 +99,183 @@ public class BtcService extends BaseService {
     }
 
     /**
-     * BTC转帐
+     * BTC获取私钥
+     */
+    public String getPrivateAddress(String address) {
+        JSONObject json = doRequest(DUMP_PRIVATE, address);
+        if (isError(json)) {
+            log.error("获取USDT地址失败:{}" + json.get("error"));
+            return "";
+        }
+        return json.getString(RESULT);
+
+    }
+
+    /**
+     * usdt 离线签名
      *
-     * @param addr
-     * @param value
+     * @param toAddress：接收地址
+     * @param amount:转账金额
      * @return
      */
-    public String send(String addr, double value) {
-        if (vailedAddress(addr)) {
-            JSONObject json = doRequest(METHOD_SEND_TO_ADDRESS, addr, value);
-            if (isError(json)) {
-                log.error("BTC 转帐给{} value:{} 失败 ：", addr, value, json.get("error"));
-                return "";
-            } else {
-                log.info("BTC 转币给{} value:{} 成功", addr, value);
-                return json.getString(RESULT);
-            }
+    public String rawSignAndSend(String fromAddress, String toAddress, String changeAddress, Long amount) throws Exception {
+        List<UTXO> utxos;
+        List<UTXO> utxoss;
+        if (mainAddress.equals(fromAddress)) {
+            utxos = this.getUnspents(fromAddress);
+
         } else {
-            log.error("BTC接受地址不正确");
-            return "";
+            utxos = this.getUnspents(fromAddress);
+            utxoss = this.getUnspents(toAddress);
+            for (int i = 0; i < utxoss.size(); i++) {
+                utxos.add(utxoss.get(i));
+            }
+        }
+        System.out.println(utxos);
+        // 获取手续费
+        Long fee = this.getOmniFee(utxos);
+        //判断是主链试试测试链
+        NetworkParameters networkParameters = isMainNet ? MainNetParams.get() : TestNet3Params.get();
+        Transaction tran = new Transaction(networkParameters);
+        if (utxos == null || utxos.size() == 0) {
+            throw new Exception("utxo为空");
+        }
+        //这是比特币的限制最小转账金额，所以很多usdt转账会收到一笔0.00000546的btc
+        Long miniBtc = 546L;
+        tran.addOutput(Coin.valueOf(miniBtc), Address.fromBase58(networkParameters, toAddress));
+
+        Long changeAmount;
+        Long utxoAmount = 0L;
+        List<UTXO> needUtxo = new ArrayList<>();
+        //过滤掉多的uxto
+        for (UTXO utxo : utxos) {
+            if (utxoAmount > (fee + miniBtc)) {
+                break;
+            } else {
+                needUtxo.add(utxo);
+                utxoAmount += utxo.getValue().value;
+            }
+        }
+        changeAmount = utxoAmount - (fee + miniBtc);
+        //余额判断
+        if (changeAmount < 0) {
+            throw new Exception("utxo余额不足");
+        }
+        if (changeAmount > 0) {
+            tran.addOutput(Coin.valueOf(changeAmount), Address.fromBase58(networkParameters, changeAddress));
+        }
+
+        //先添加未签名的输入，也就是utxo
+        for (UTXO utxo : needUtxo) {
+            tran.addInput(utxo.getHash(), utxo.getIndex(), utxo.getScript()).setSequenceNumber(TransactionInput.NO_SEQUENCE - 2);
+        }
+
+
+        //下面就是签名
+        for (int i = 0; i < needUtxo.size(); i++) {
+            //这里获取地址
+            String addr = needUtxo.get(i).getAddress();
+            String privateKeys = this.getPrivateAddress(addr);
+
+            ECKey ecKey = DumpedPrivateKey.fromBase58(networkParameters, privateKeys).getKey();
+            TransactionInput transactionInput = tran.getInput(i);
+            Script scriptPubKey = ScriptBuilder.createOutputScript(Address.fromBase58(networkParameters, addr));
+            Sha256Hash hash = tran.hashForSignature(i, scriptPubKey, Transaction.SigHash.ALL, false);
+            ECKey.ECDSASignature ecSig = ecKey.sign(hash);
+            TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
+            transactionInput.setScriptSig(ScriptBuilder.createInputScript(txSig, ecKey));
+        }
+
+        //这是签名之后的原始交易，直接去广播就行了
+        String signedHex = Hex.toHexString(tran.bitcoinSerialize());
+        log.info("签名之后的原始交易:{}" + signedHex);
+        //这是交易的hash
+        String txHash = Hex.toHexString(Utils.reverseBytes(Sha256Hash.hash(Sha256Hash.hash(tran.bitcoinSerialize()))));
+        log.info("fee:{},utxoAmount:{},changeAmount:{}", fee, utxoAmount, changeAmount, txHash);
+
+        JSONObject json = doRequest("sendrawtransaction", signedHex);
+        if (isError(json)) {
+            log.error("发送交易失败");
+            return null;
+        } else {
+            String result = json.getString("result");
+            log.info("发送成功 hash:{}", result);
+            return result;
+        }
+
+    }
+
+    /**
+     * 获取矿工费用
+     *
+     * @param utxos
+     * @return
+     */
+    public Long getOmniFee(List<UTXO> utxos) {
+        Long miniBtc = 546L;
+        Long feeRate = getFeeRate();
+        Long utxoAmount = 0L;
+        Long fee = 0L;
+        Long utxoSize = 0L;
+        for (UTXO output : utxos) {
+            utxoSize++;
+            if (utxoAmount > (fee + miniBtc)) {
+                break;
+            } else {
+                utxoAmount += output.getValue().value;
+                fee = (utxoSize * 148 + 34 * 2 + 10) * feeRate;
+            }
+        }
+        return fee;
+    }
+
+
+    public List<UTXO> getUnspents(String... address) {
+        List<UTXO> utxos = Lists.newArrayList();
+
+        try {
+            JSONObject jsonObject = doRequest(METHOD_GET_LISTUNSPENT, 0, 99999999, address);
+            JSONArray outputs = jsonObject.getJSONArray("result");
+            if (outputs == null || outputs.size() == 0) {
+                System.out.println("交易异常，余额不足");
+            }
+            for (int i = 0; i < outputs.size(); i++) {
+                JSONObject outputsMap = outputs.getJSONObject(i);
+                String txid = outputsMap.get("txid").toString();
+                String vout = outputsMap.get("vout").toString();
+                String addr = outputsMap.get("address").toString();
+                String script = outputsMap.get("scriptPubKey").toString();
+                String amount = outputsMap.get("amount").toString();
+                BigDecimal bigDecimal = new BigDecimal(amount);
+                bigDecimal = bigDecimal.multiply(new BigDecimal(100000000));
+                // String confirmations = outputsMap.get("confirmations").toString();
+                UTXO utxo = new UTXO(Sha256Hash.wrap(txid), Long.valueOf(vout), Coin.valueOf(bigDecimal.longValue()),
+                        0, false, new Script(Hex.decode(script)), addr);
+                System.out.println(utxo.getAddress());
+                utxos.add(utxo);
+            }
+            return utxos;
+        } catch (Exception e) {
+            log.error("【BTC获取未消费列表】失败，", e);
+            return null;
+        }
+
+    }
+
+    /**
+     * 获取btc费率
+     *
+     * @return
+     */
+    public Long getFeeRate() {
+        try {
+            String httpGet1 = HttpUtils.doGet("https://bitcoinfees.earn.com/api/v1/fees/recommended").toString();
+            Map map = JSON.parseObject(httpGet1, Map.class);
+            Long fastestFee = Long.valueOf(map.get("fastestFee").toString());
+            return fastestFee;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0L;
         }
     }
 
@@ -221,9 +392,7 @@ public class BtcService extends BaseService {
         WalletConfig walletConfig = WalletConfigInit.map.get(WalletConfig.BTC);
         String user = walletConfig.getUser();
         String password = walletConfig.getPassword();
-        String host = walletConfig.getHost();
-        String port = walletConfig.getPort();
-
+        String url = walletConfig.getHost() + ":" + walletConfig.getPort();
         Map<String, Object> param = new HashedMap();
         param.put("id", System.currentTimeMillis() + "");
         param.put("jsonrpc", "2.0");
@@ -237,7 +406,7 @@ public class BtcService extends BaseService {
         String resp = "";
         if (METHOD_GET_TRANSACTION.equals(method)) {
             try {
-                resp = HttpUtils.doPost(host, "", headers, null, param).toString();
+                resp = HttpUtils.doPost(url, "", headers, null, param).toString();
             } catch (Exception e) {
                 if (e instanceof IOException) {
                     resp = "{}";
@@ -245,7 +414,7 @@ public class BtcService extends BaseService {
             }
         } else {
             try {
-                resp = HttpUtils.doPost(host, "", headers, null, param).toString();
+                resp = HttpUtils.doPost(url, "", headers, null, param).toString();
             } catch (Exception e) {
                 if (e instanceof IOException) {
                     resp = "{}";

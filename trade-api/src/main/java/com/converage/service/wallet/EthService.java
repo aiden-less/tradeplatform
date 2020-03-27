@@ -83,20 +83,11 @@ public class EthService extends BaseService {
     @Autowired
     private EnvironmentUtils environmentUtils;
 
-    @Autowired
-    private EthService ethService;
-
-    private static Web3j web3j;
-
-    static {
-        String host = WalletConfigInit.map.get(WalletConfig.ETH).getHost();
-        web3j = Web3j.build(new HttpService(host));
-    }
+    private static Web3j web3j = Web3j.build(new HttpService(WalletConfig.ETH));
 
     public WalletAccount createAccount(String walletName, String fileName, String pwd) {
         return ETHWalletUtils.generateMnemonic(walletName, fileName, pwd);
     }
-
 
     //以太坊转账
     public EthSendTransaction sendEthTransaction(String fromAddress, String toAddress, BigDecimal amount, String privateKey) throws ExecutionException, InterruptedException, IOException {
@@ -499,13 +490,13 @@ public class EthService extends BaseService {
             String userPrivateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
             String contractAddress = filterSW.getContractAddr();
             try {
-                EthSendTransaction ethSendTransaction = ethService.sendEthTokenTransaction(fromAddress, mergeRechargeAddr, contractAddress, recordAmount, userPrivateKey);
+                EthSendTransaction ethSendTransaction = sendEthTokenTransaction(fromAddress, mergeRechargeAddr, contractAddress, recordAmount, userPrivateKey);
                 if (!ethSendTransaction.hasError()) {
                     String transactionHash = ethSendTransaction.getTransactionHash();
                     WalletTransferRecord wtr = new WalletTransferRecord(
                             settlementName, "充值资产归集", fromAddress, mergeRechargeAddr, recordAmount, new Timestamp(System.currentTimeMillis()), transactionHash
                     );
-                    ethService.insertIfNotNull(wtr);
+                    insertIfNotNull(wtr);
                 }
             } catch (ExecutionException | InterruptedException | IOException e) {
                 e.printStackTrace();
