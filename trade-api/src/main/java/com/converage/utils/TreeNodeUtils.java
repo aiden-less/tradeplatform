@@ -3,7 +3,6 @@ package com.converage.utils;
 import com.converage.entity.sys.FuncTreeNode;
 import com.converage.entity.sys.UserTreeNode;
 import com.converage.entity.user.User;
-import com.converage.entity.user.UserSocial;
 import com.converage.entity.work.ApiTreeNode;
 
 import java.math.BigDecimal;
@@ -60,41 +59,6 @@ public class TreeNodeUtils {
         return current_node;
     }
 
-    public static UserTreeNode generateUserTreeNode(String userId, List<UserTreeNode> list, BigDecimal usdtTCNYPrice) {
-        UserTreeNode current_node = new UserTreeNode();
-        for (UserTreeNode item : list) {
-            if (userId.equals(item.getId())) {
-                BigDecimal socialAchievement = BigDecimal.ZERO;
-                Integer socialNum = 0;
-                if (!"1".equals(userId)) {
-
-                    UserSocial userSocial = CacheUtils.getSocialMap(userId);
-                    socialAchievement = userSocial.getSocialAchievement();
-                    socialNum = userSocial.getSocialNum();
-                }
-                item.setLabel(item.getLabel() + " --- " + "业绩：" + socialAchievement);
-                item.setLabel(item.getLabel() + " --- " + "社群：" + socialNum);
-                current_node = item;
-                break;
-            }
-        }
-
-        List<UserTreeNode> childrenFuncTreeNode = new ArrayList<>();
-        for (UserTreeNode item : list) {
-            if (userId.equals(item.getInviteId())) {
-
-
-                childrenFuncTreeNode.add(item);
-            }
-        }
-
-        for (UserTreeNode item : childrenFuncTreeNode) {
-            UserTreeNode node = generateUserTreeNode(item.getId(), list, usdtTCNYPrice);
-            current_node.getChildren().add(node);
-        }
-        return current_node;
-
-    }
 
     public static void filterUserDownTreeNode(String userId, List<User> users, List<User> userList) {
         for (User user : users) {

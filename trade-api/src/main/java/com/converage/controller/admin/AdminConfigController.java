@@ -11,7 +11,6 @@ import com.converage.constance.RedisKeyConst;
 import com.converage.entity.assets.WalletInfo;
 import com.converage.entity.common.AppUpgrade;
 import com.converage.entity.common.GlobalConfig;
-import com.converage.entity.user.UserNode;
 import com.converage.service.transaction.CctService;
 import com.converage.service.common.AppUpgradeService;
 import com.converage.service.common.GlobalConfigService;
@@ -206,15 +205,12 @@ public class AdminConfigController {
         String[] strings = usdtRechargeAddrStr.split(",");
         List<String> usdtRechargeAddrSwitchList = Arrays.asList(strings);
 
-        Map<String, Object> orderMap = ImmutableMap.of(UserNode.Reward_percentage, CommonConst.MYSQL_ASC);
-        List<UserNode> userNodes = baseService.selectAll(UserNode.class, orderMap);
-
         Map<String, Object> map = new HashMap<>();
         map.put("usdtRechargeAddr", usdtRechargeAddr);
         map.put("usdtRechargeAddrSwitchList", usdtRechargeAddrSwitchList);
         map.put("usdtCnyPrice", usdtCnyPrice);
         map.put("currencyCnyPrice", currencyCnyPrice);
-        map.put("userNodes", userNodes);
+
 
         return ResultUtils.success(map);
     }

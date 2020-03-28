@@ -151,7 +151,7 @@ public class UserService extends BaseService {
 //                    mainNetUserAddr.setMainNetId(mainNetInfo.getId());
 //                    mainNetUserAddr.setUserId(registerUserId);
 //                    mainNetUserAddr.setMainNetAddr(toAddress);
-//                    mainNetUserAddr.setMainNetKey(privateKey);
+//                    mainNetUserAddr.setPrivateKey(privateKey);
 //                    ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
 //                }
             }

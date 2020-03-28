@@ -47,15 +47,6 @@ public interface UserMapper {
     User getUserInfo(@Param("userId") String userId);
 
 
-    /**
-     * 用户邀请列表
-     *
-     * @param userId
-     * @param inviteType
-     * @param pagination
-     * @return
-     */
-    List<InviteUserRecord> listInviteUser(@Param("userId") String userId, @Param("inviteType") Integer inviteType, @Param("pagination") Pagination pagination);
 
     /**
      * 删除微信信息
@@ -77,21 +68,6 @@ public interface UserMapper {
      */
     void updateUserInfo(User user);
 
-    /**
-     * 按id查询用户下所有邀请用户
-     *
-     * @param userIds
-     * @return
-     */
-    List<InviteShareProfitUser> listInviteUserByIds(@Param("userIds") List<String> userIds);
-
-    /**
-     * 按id查询用户下所有邀请用户
-     *
-     * @param userIds
-     * @return
-     */
-    List<InviteShareProfitUser> listInviteUserByIdsStatus(@Param("userIds") List<String> userIds, @Param("status") Integer status);
 
     /**
      * 查询用户信息

@@ -27,13 +27,13 @@ public class MainNetUserAddr implements Serializable{
     @Column(name = Main_net_addr)
     private String mainNetAddr; //
 
-    @Column(name = Main_net_key)
-    private String mainNetKey; //
+    @Column(name = Private_key)
+    private String privateKey; //
 
     //DB Column name
     public static final String Id = "id";
     public static final String Main_net_id = "main_net_id";
     public static final String User_id = "user_id";
     public static final String Main_net_addr = "main_net_addr";
-    public static final String Main_net_key = "main_net_key";
+    public static final String Private_key = "private_key";
 }

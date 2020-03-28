@@ -7,6 +7,7 @@ import com.aliyun.oss.common.utils.HttpUtil;
 import com.converage.architecture.service.BaseService;
 import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.chain.WalletConfig;
+import com.converage.exception.CoinException;
 import com.converage.init.WalletConfigInit;
 import com.converage.utils.HttpUtils;
 import com.google.common.collect.Lists;
@@ -111,8 +112,19 @@ public class BtcService extends BaseService {
 
     }
 
+
+    public Object signSendToAddress(String address, double amount) throws CoinException {
+        JSONObject json = doRequest(METHOD_SEND_TO_ADDRESS, address);
+        if (isError(json)) {
+            log.error("BTC转账失败:{}" + json.get("error"));
+            return "";
+        }
+        return json.getString(RESULT);
+    }
+
+
     /**
-     * usdt 离线签名
+     * BTC 离线签名
      *
      * @param toAddress：接收地址
      * @param amount:转账金额
@@ -127,9 +139,7 @@ public class BtcService extends BaseService {
         } else {
             utxos = this.getUnspents(fromAddress);
             utxoss = this.getUnspents(toAddress);
-            for (int i = 0; i < utxoss.size(); i++) {
-                utxos.add(utxoss.get(i));
-            }
+            utxos.addAll(utxoss);
         }
         System.out.println(utxos);
         // 获取手续费

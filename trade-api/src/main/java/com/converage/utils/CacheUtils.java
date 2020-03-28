@@ -2,8 +2,6 @@ package com.converage.utils;
 
 import com.converage.architecture.exception.BusinessException;
 import com.converage.entity.transaction.CctOrder;
-import com.converage.entity.user.UserNode;
-import com.converage.entity.user.UserSocial;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -21,12 +19,6 @@ public class CacheUtils {
     public static Map<String, String> certCountMap = new ConcurrentHashMap<>(100);
 
 
-    public static ConcurrentHashMap<String, UserSocial> socialMap = new ConcurrentHashMap<>(1000);
-
-//    public static HashMap<String, User> userMap = new HashMap(1000);
-
-    public static HashMap<Integer, UserNode> userNodeMap = new HashMap(10);
-    public static List<UserNode> userNodeList = new ArrayList<>(100);
 
     //    public static List<User> allUserList = new ArrayList<>(1000);
     public static LinkedBlockingDeque<CctOrder> atoLinkedBlockingDeque = new LinkedBlockingDeque<>();
@@ -81,24 +73,6 @@ public class CacheUtils {
         withdrawCountMap.put(key, "1");
     }
 
-    public static void putSocialMap(String userId, UserSocial userSocial) {
-        socialMap.put(userId, userSocial);
-    }
-
-    public static UserSocial getSocialMap(String userId) {
-        return socialMap.get(userId);
-
-    }
-
-
-    public static void putUserNodeMap(Integer teamLevel, UserNode userNode) {
-        System.out.println();
-        userNodeMap.put(teamLevel, userNode);
-    }
-
-    public static UserNode getUserNodeMap(Integer teamLevel) {
-        return userNodeMap.get(teamLevel);
-    }
 
     public static void addAto(CctOrder ato) {
         atoLinkedBlockingDeque.add(ato);

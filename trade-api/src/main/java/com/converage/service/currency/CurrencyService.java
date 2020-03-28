@@ -52,8 +52,6 @@ public class CurrencyService extends BaseService {
         String result1 = HttpClientUtils.doGet(url1, new HashMap<>(), HttpClientUtils.CHARSET);
         ExchangeRate exchangeRate = JSONObject.parseObject(result1, ExchangeRate.class);
         BigDecimal CNYToUsdRate = exchangeRate.getConversions().get("USD").get("CNY");
-        redisClient.set(RedisKeyConst.CNY_TO_USD_RATE, CNYToUsdRate.stripTrailingZeros().toPlainString());
-
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
