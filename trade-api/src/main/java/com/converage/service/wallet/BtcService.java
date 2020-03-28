@@ -398,11 +398,16 @@ public class BtcService extends BaseService {
     }
 
 
-    private JSONObject doRequest(String method, Object... params) {
+    public JSONObject doRequest(String method, Object... params) {
         WalletConfig walletConfig = WalletConfigInit.map.get(WalletConfig.BTC);
         String user = walletConfig.getUser();
         String password = walletConfig.getPassword();
+
+
         String url = walletConfig.getHost() + ":" + walletConfig.getPort();
+
+        url = "http://47.56.150.27:18332";
+
         Map<String, Object> param = new HashedMap();
         param.put("id", System.currentTimeMillis() + "");
         param.put("jsonrpc", "2.0");
@@ -436,5 +441,21 @@ public class BtcService extends BaseService {
     }
 
     public static void main(String args[]) throws Exception {
+        String user = "testuser";
+        String password = "123456";
+
+        String url = "http://47.56.150.27:18332";
+
+        Map<String, Object> param = new HashedMap();
+        param.put("id", System.currentTimeMillis() + "");
+        param.put("jsonrpc", "2.0");
+        param.put("method", "getblockcount");
+
+        String creb = Base64.encodeBase64String((user + ":" + password).getBytes());
+        Map<String, String> headers = new HashMap<>(2);
+        headers.put("Authorization", "Basic " + creb);
+
+        String resp = HttpUtils.doPost(url, "", headers, null, param).toString();
+        System.out.println(resp);   ;
     }
 }

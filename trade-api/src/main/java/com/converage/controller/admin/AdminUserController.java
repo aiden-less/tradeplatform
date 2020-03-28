@@ -70,14 +70,6 @@ public class AdminUserController {
     private UserMessageService userMessageService;
 
     /**
-     * 会员列表
-     */
-    @PostMapping("list")
-    public Result<?> list(@RequestBody Pagination<User> pagination) {
-        return ResultUtils.success(userService.selectUerInfo(pagination), pagination.getTotalRecordNumber());
-    }
-
-    /**
      * 用户信息
      *
      * @return

@@ -6,6 +6,7 @@ import com.converage.architecture.mybatis.annotation.Table;
 import lombok.Data;
 import org.apache.ibatis.type.Alias;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @Alias("MainNetInfo")
@@ -26,6 +27,9 @@ public class MainNetInfo implements Serializable{
     @Column(name = Block_sync_limit_number)
     private Long blockSyncLimitNumber; //
 
+    @Column(name = Fee_amount)
+    private BigDecimal feeAmount; //
+
     @Column(name = If_Valid)
     private Boolean ifValid; //
 
@@ -35,5 +39,7 @@ public class MainNetInfo implements Serializable{
     public static final String Net_name = "net_name";
     public static final String Block_number = "block_number";
     public static final String Block_sync_limit_number = "block_sync_limit_number";
+    public static final String Fee_amount = "fee_amount";
     public static final String If_Valid = "if_Valid";
+
 }

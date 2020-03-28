@@ -1,5 +1,6 @@
 package com.converage;
 
+import com.converage.service.wallet.BtcService;
 import com.converage.utils.HttpClientUtils;
 import com.google.common.collect.ImmutableMap;
 import org.bitcoinj.core.ECKey;
@@ -7,6 +8,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet2Params;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Map;
@@ -16,6 +18,9 @@ import java.util.Map;
  */
 @SpringBootTest
 public class BtcTest {
+
+    @Autowired
+    private BtcService btcService;
 
     @Test
     public void test() {
@@ -41,6 +46,11 @@ public class BtcTest {
         );
         String str = HttpClientUtils.doPost(url, map);
         System.out.println(str);
+    }
+
+    @Test
+    public void test3() {
+        btcService.doRequest("getblockcount", null);
     }
 
 }

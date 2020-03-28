@@ -31,7 +31,7 @@ public class UserMessageService extends BaseService {
 
 
     public List listByUserName(String userName, Pagination pagination) {
-        return userMapper.listUserMessage(userName, pagination);
+        return null;
     }
 
     public GoodsBrand detail(String entity) {
@@ -77,6 +77,6 @@ public class UserMessageService extends BaseService {
     }
 
     public List<UserMessage> listByAll(String userId, Pagination pagination) {
-        return userMapper.listAllMessage(userId, pagination);
+        return null;
     }
 }

@@ -248,7 +248,7 @@ public class UserService extends BaseService {
      * @return
      */
     public User allUserInfo(String userId) {
-        User user = userMapper.getUserInfo(userId);
+        User user = null;
         if (user == null) {
             throw new LoginException();
         }
@@ -301,19 +301,10 @@ public class UserService extends BaseService {
             user.setPayPassword(EncryptUtils.md5Password(user.getPayPassword()));
         }
 
-        userMapper.updateUserInfo(user);
     }
 
 
-    /**
-     * 查询用户信息
-     *
-     * @param pagination
-     * @return
-     */
-    public TotalResult<User> selectUerInfo(Pagination<User> pagination) {
-        return new TotalResult<>(null, userMapper.selectUerInfo(pagination));
-    }
+
 
 
     /**
