@@ -206,7 +206,7 @@ public class GlobalConfigService extends BaseService {
         Withdraw_Output_Private_Key,//提现转出地址密钥
 
 
-        WALLET_KEY,//钱包密钥
+        WALLET_KEY,//ETH钱包部分密码
     }
 
     void switchUsdtWalletAddress() {

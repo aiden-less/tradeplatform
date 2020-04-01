@@ -80,8 +80,7 @@ public class AppUserController {
     @RequestMapping("info")
     public Result<?> assets(HttpServletRequest request) throws UnsupportedEncodingException {
         String userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-        User userInfo = userService.allUserInfo(userId);
-        return ResultUtils.success(userInfo);
+        return ResultUtils.success();
     }
 
 

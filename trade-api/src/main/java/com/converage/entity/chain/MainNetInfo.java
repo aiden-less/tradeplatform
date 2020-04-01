@@ -30,6 +30,9 @@ public class MainNetInfo implements Serializable{
     @Column(name = Fee_amount)
     private BigDecimal feeAmount; //
 
+    @Column(name = If_Audit)
+    private Boolean ifAudit; //
+
     @Column(name = If_Valid)
     private Boolean ifValid; //
 
@@ -40,6 +43,7 @@ public class MainNetInfo implements Serializable{
     public static final String Block_number = "block_number";
     public static final String Block_sync_limit_number = "block_sync_limit_number";
     public static final String Fee_amount = "fee_amount";
-    public static final String If_Valid = "if_Valid";
+    public static final String If_Audit = "if_audit";
+    public static final String If_Valid = "if_valid";
 
 }

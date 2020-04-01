@@ -22,9 +22,6 @@ public class TradeCoin implements Serializable {
     @Column(name = Id)
     private String id;
 
-    @Column(name = Settlement_id)
-    private Integer settlementId;
-
     @Column(name = Coin_name)
     private String coinName;
 
@@ -34,8 +31,8 @@ public class TradeCoin implements Serializable {
     @Column(name = If_valuation)
     private Boolean ifValuation; //是否计价币种
 
-    @Column(name = Main_net_id)
-    private String mainNetId; //主网id
+    @Column(name = Main_net_ids)
+    private String mainNetIds; //主网id
 
     @Column(name = If_Contract_token)
     private Boolean ifContractToken; //是否属于合约代币
@@ -101,11 +98,10 @@ public class TradeCoin implements Serializable {
     private BigDecimal balance;
 
     public static final String Id = "id";
-    public static final String Settlement_id = "settlement_id";
     public static final String If_valuation = "If_valuation";
     public static final String Coin_name = "coin_name";
     public static final String Coin_desc = "coin_desc";
-    public static final String Main_net_id = "main_net_id";
+    public static final String Main_net_ids = "main_net_ids";
 
     public static final String If_Contract_token = "if_Contract_token";
     public static final String Contract_addr = "contract_addr";

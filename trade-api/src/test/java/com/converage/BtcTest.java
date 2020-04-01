@@ -48,9 +48,5 @@ public class BtcTest {
         System.out.println(str);
     }
 
-    @Test
-    public void test3() {
-        btcService.doRequest("getblockcount", null);
-    }
 
 }

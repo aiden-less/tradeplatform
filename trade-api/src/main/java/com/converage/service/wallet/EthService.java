@@ -3,6 +3,7 @@ package com.converage.service.wallet;
 import com.converage.entity.chain.WalletConfig;
 import com.converage.entity.wallet.WalletAccount;
 import com.converage.init.WalletConfigInit;
+import com.converage.mapper.user.CctAssetsMapper;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.dto.TasteFilePathConfig;
 import com.converage.architecture.exception.BusinessException;
@@ -75,7 +76,7 @@ public class EthService extends BaseService {
     private AssetsTurnoverService assetsTurnoverService;
 
     @Autowired
-    private UserAssetsService userAssetsService;
+    private CctAssetsMapper cctAssetsMapper;
 
     @Autowired
     private TransactionTemplate transactionTemplate;
@@ -83,7 +84,7 @@ public class EthService extends BaseService {
     @Autowired
     private EnvironmentUtils environmentUtils;
 
-    private static Web3j web3j = Web3j.build(new HttpService(WalletConfig.ETH));
+    private static Web3j web3j = Web3j.build(new HttpService("https://mainnet.infura.io/v3/eac43464a30d4fcc890f3656e8290e45"));
 
     public WalletAccount createAccount(String walletName, String fileName, String pwd) {
         return ETHWalletUtils.generateMnemonic(walletName, fileName, pwd);
@@ -129,7 +130,6 @@ public class EthService extends BaseService {
 
 
         TradeCoin tradeCoin = selectOneByWhereString(TradeCoin.Contract_addr + "=", contractAddress, TradeCoin.class);
-
         Integer decimalPoint = tradeCoin.getDecimalPoint();
 
         amount = amount.setScale(decimalPoint, BigDecimal.ROUND_DOWN);
@@ -146,8 +146,8 @@ public class EthService extends BaseService {
 
         String encodedFunction = FunctionEncoder.encode(function);
 
-        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce, Convert.toWei("25", Convert.Unit.GWEI).toBigInteger(),
-                Convert.toWei("60000", Convert.Unit.WEI).toBigInteger(), contractAddress, encodedFunction);
+        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce, Convert.toWei("18", Convert.Unit.GWEI).toBigInteger(),
+                Convert.toWei("45000", Convert.Unit.WEI).toBigInteger(), contractAddress, encodedFunction);
 
         byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signedMessage);
@@ -179,7 +179,6 @@ public class EthService extends BaseService {
         System.out.println("syncEthBlock" + new Date());
         environmentUtils.checkIfPro();
 
-        List<TradeCoin> wallets = selectListByWhereString(TradeCoin.If_Contract_token + "=", Boolean.TRUE, TradeCoin.class);
 
         Request<?, EthBlockNumber> ethBlockNumberRequest = web3j.ethBlockNumber();
         EthBlockNumber ethBlockNumber = ethBlockNumberRequest.send();
@@ -190,6 +189,9 @@ public class EthService extends BaseService {
             return;
         }
         String mainNetInfoId = mainNetInfo.getId();
+
+        List<TradeCoin> wallets = selectListByWhereString(TradeCoin.Main_net_ids + "LIKE ", "%" + mainNetInfoId + "%", TradeCoin.class);
+
 
         BigInteger currencyBlockNumber = BigInteger.valueOf(mainNetInfo.getBlockNumber());
         BigInteger blockSyncLimitNumber = BigInteger.valueOf(mainNetInfo.getBlockSyncLimitNumber());
@@ -231,7 +233,7 @@ public class EthService extends BaseService {
 
                 BigDecimal transferAmount = new BigDecimal(transferRecordValue.toString());
 //                Integer settlementId = null;
-                TradeCoin filterSW = null;
+                TradeCoin filterSW;
                 if (transferAmount.compareTo(BigDecimal.ZERO) == 0) { //ERC TOKEN
                     String contractAddress = transactionObject.getTo();
 
@@ -278,6 +280,7 @@ public class EthService extends BaseService {
                     }
 
                 } else if (transferAmount.compareTo(BigDecimal.ZERO) > 0) { //ETH
+                    filterSW = selectOneByWhereString(MainNetInfo.Net_name + "=", WalletConfig.ETH, TradeCoin.class);
                     transferAmount = fromWei(transferRecordValue);
                 } else {
                     log.error("异常记录，转账金额：{}", transferAmount.toPlainString());
@@ -301,9 +304,8 @@ public class EthService extends BaseService {
                     confirmFlg = true;
                 }
 
-//                if (settlementId == null) {
-//                    continue;
-//                }
+
+                String coinId = filterSW.getId();
 
 //                Integer finalSettlementId = settlementId;
 //                TradeCoin filterSW = wallets.stream().filter(sw -> sw.getSettlementId().equals(finalSettlementId)).findFirst().orElse(null);
@@ -316,7 +318,7 @@ public class EthService extends BaseService {
                 userAssetsCharge.setTransactionHash(transactionHash);
                 userAssetsCharge.setUserId(userId);
                 userAssetsCharge.setRecordType(USERASSETS_RECHARGE);
-                userAssetsCharge.setSettlementId(0);
+                userAssetsCharge.setCoinId(coinId);
                 userAssetsCharge.setStatus(judgeRechargeStatus(transactionFlag, filterSW.getIfRecharge()));
                 userAssetsCharge.setRecordAmount(transferAmount);
                 String detailStr = "转出地址：" + fromAddress + "，转入地址：" + toAddress;
@@ -337,41 +339,18 @@ public class EthService extends BaseService {
                 String errorMsg = "区块同步失败";
                 if (userAssetsChargeList.size() > 0) {
                     for (UserAssetsCharge uac : userAssetsChargeList) {
+                        String userId = uac.getUserId();
+                        BigDecimal amount = uac.getRecordAmount();
+                        String coinId = uac.getCoinId();
+
                         ValueCheckUtils.notZero(insertIfNotNull(uac), errorMsg);
+
+                        ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, amount, coinId), errorMsg);
                     }
                 }
                 mainNetInfo.setBlockNumber(confirmBlock);
                 ValueCheckUtils.notZero(update(mainNetInfo), errorMsg);
 
-                for (UserAssetsCharge userAssetsCharge : userAssetsChargeList) {
-                    String chargeId = userAssetsCharge.getId();
-                    Integer status = userAssetsCharge.getStatus();
-                    String userId = userAssetsCharge.getUserId();
-                    Integer settlementId = userAssetsCharge.getSettlementId();
-                    BigDecimal amount = userAssetsCharge.getRecordAmount();
-                    String fromAddress = userAssetsCharge.getFromAddress();
-                    String toAddress = userAssetsCharge.getToAddress();
-                    String detailStr = "转出地址：" + fromAddress + "，转入地址：" + toAddress;
-
-
-                    String remark;
-                    if (status == USERASSETS_RECHARGE_AUDIT_PASS) {
-                        ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, amount, settlementId), errorMsg);
-                        remark = "通过";
-                    } else if (status == USERASSETS_RECHARGE_AUDIT_NONE) {
-                        remark = "审核中";
-                    } else {
-                        remark = "不通过";
-                    }
-
-                    AssetsTurnoverExtralParam extralParam = new AssetsTurnoverExtralParam();
-                    extralParam.setChargeId(chargeId);
-
-                    assetsTurnoverService.createAssetsTurnover(
-                            userId, TURNOVER_TYPE_RECHARGE, amount, COMPANY_ID, userId, remark, settlementId,
-                            detailStr, extralParam
-                    );
-                }
 
             }
         });
@@ -461,13 +440,13 @@ public class EthService extends BaseService {
             String userId = uac.getUserId();
             String id = uac.getId();
             String fromAddress = uac.getToAddress();
-            Integer settlementId = uac.getSettlementId();
-            String settlementName = userAssetsService.getSettlementNameById(settlementId);
-
-            TradeCoin filterSW = tradeCoins.stream().filter(sw -> sw.getSettlementId().equals(settlementId)).findFirst().orElse(null);
+            String coinId = uac.getCoinId();
+            TradeCoin filterSW = tradeCoins.stream().filter(sw -> sw.getId().equals(coinId)).findFirst().orElse(null);
             if (filterSW == null) {
                 continue;
             }
+
+            String settlementName = filterSW.getCoinName();
 
             BigDecimal minMergeAmount = filterSW.getMinMergeAmount();
             BigDecimal recordAmount = uac.getRecordAmount();
@@ -509,68 +488,66 @@ public class EthService extends BaseService {
 
     //归集提现手续费
     public void mergeWithdraw() {
-        environmentUtils.checkIfPro();
-
-        String errorMsg = "归集提现手续费失败";
-        String Merge_Transfer_Free_Address = globalConfigService.get(GlobalConfigService.Enum.Merge_Transfer_Free_Address);
-        Map<String, Object> whereMap = ImmutableMap.of(
-                UserAssetsCharge.If_merge_poundage + "=", Boolean.FALSE,
-                UserAssetsCharge.Record_type + "=", USERASSETS_WITHDRAW,
-                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
-        );
-
-        List<TradeCoin> tradeCoins = selectListByWhereString(TradeCoin.If_recharge + "=", Boolean.TRUE, TradeCoin.class);
-        List<UserAssetsCharge> userAssetsChargeList = selectListByWhereMap(whereMap, UserAssetsCharge.class);
-
-
-        for (UserAssetsCharge uac : userAssetsChargeList) {
-            String userId = uac.getUserId();
-            String id = uac.getId();
-            String fromAddress = uac.getFromAddress();
-//            String toAddress = uac.getToAddress();
-
-            BigDecimal poundageAmount = uac.getPoundageAmount();
-            Integer settlementId = uac.getSettlementId();
-            String settlementName = userAssetsService.getSettlementNameById(settlementId);
-
-            TradeCoin filterSW = tradeCoins.stream().filter(sw -> sw.getSettlementId().equals(settlementId)).findFirst().orElse(null);
-            if (filterSW == null) {
-                continue;
-            }
-
-            BigDecimal minMergeAmount = filterSW.getMinMergeAmount();
-            if (minMergeAmount.compareTo(poundageAmount) > 0) {
-                continue;
-            }
-
-            String walletName = WalletConfig.ETH;
-            String filePath = TasteFilePathConfig.walletEthFolder + "/" + walletName + "/" + "keystore_" + userId + ".json";
-
-            String keyStore = null;
-            try {
-                keyStore = FileUtils.readFileToString(new File(filePath), "UTF-8");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
-            Credentials credentials = ETHWalletUtils.loadCredentialsByKeystore(keyStore, walletKey + userId);
-            ValueCheckUtils.notEmpty(credentials, errorMsg);
-            String userPrivateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
-            try {
-                EthSendTransaction ethSendTransaction = sendEthTransaction(fromAddress, Merge_Transfer_Free_Address, poundageAmount, userPrivateKey);
-                if (!ethSendTransaction.hasError()) {
-                    String transactionHash = ethSendTransaction.getTransactionHash();
-                    WalletTransferRecord wtr = new WalletTransferRecord(
-                            settlementName, "提现手续费归集", fromAddress, Merge_Transfer_Free_Address, poundageAmount, new Timestamp(System.currentTimeMillis()), transactionHash
-                    );
-                    insertIfNotNull(wtr);
-                }
-            } catch (ExecutionException | InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-
-
-        }
+//        environmentUtils.checkIfPro();
+//
+//        String errorMsg = "归集提现手续费失败";
+//        String Merge_Transfer_Free_Address = globalConfigService.get(GlobalConfigService.Enum.Merge_Transfer_Free_Address);
+//        Map<String, Object> whereMap = ImmutableMap.of(
+//                UserAssetsCharge.If_merge_poundage + "=", Boolean.FALSE,
+//                UserAssetsCharge.Record_type + "=", USERASSETS_WITHDRAW,
+//                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
+//        );
+//
+//        List<TradeCoin> tradeCoins = selectListByWhereString(TradeCoin.If_recharge + "=", Boolean.TRUE, TradeCoin.class);
+//        List<UserAssetsCharge> userAssetsChargeList = selectListByWhereMap(whereMap, UserAssetsCharge.class);
+//
+//
+//        for (UserAssetsCharge uac : userAssetsChargeList) {
+//            String userId = uac.getUserId();
+//            String id = uac.getId();
+//            String fromAddress = uac.getFromAddress();
+////            String toAddress = uac.getToAddress();
+//
+//            BigDecimal poundageAmount = uac.getPoundageAmount();
+//            Integer settlementId = uac.getSettlementId();
+//            String settlementName = userAssetsService.getSettlementNameById(settlementId);
+//
+//            TradeCoin filterSW = tradeCoins.stream().filter(sw -> sw.getSettlementId().equals(settlementId)).findFirst().orElse(null);
+//            if (filterSW == null) {
+//                continue;
+//            }
+//
+//            BigDecimal minMergeAmount = filterSW.getMinMergeAmount();
+//            if (minMergeAmount.compareTo(poundageAmount) > 0) {
+//                continue;
+//            }
+//
+//            String walletName = WalletConfig.ETH;
+//            String filePath = TasteFilePathConfig.walletEthFolder + "/" + walletName + "/" + "keystore_" + userId + ".json";
+//
+//            String keyStore = null;
+//            try {
+//                keyStore = FileUtils.readFileToString(new File(filePath), "UTF-8");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
+//            Credentials credentials = ETHWalletUtils.loadCredentialsByKeystore(keyStore, walletKey + userId);
+//            ValueCheckUtils.notEmpty(credentials, errorMsg);
+//            String userPrivateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
+//            try {
+//                EthSendTransaction ethSendTransaction = sendEthTransaction(fromAddress, Merge_Transfer_Free_Address, poundageAmount, userPrivateKey);
+//                if (!ethSendTransaction.hasError()) {
+//                    String transactionHash = ethSendTransaction.getTransactionHash();
+//                    WalletTransferRecord wtr = new WalletTransferRecord(
+//                            settlementName, "提现手续费归集", fromAddress, Merge_Transfer_Free_Address, poundageAmount, new Timestamp(System.currentTimeMillis()), transactionHash
+//                    );
+//                    insertIfNotNull(wtr);
+//                }
+//            } catch (ExecutionException | InterruptedException | IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
 
     }
@@ -597,18 +574,19 @@ public class EthService extends BaseService {
     }
 
 
-    public static void main(String[] args) throws IOException {
-        String walletKey = "ts-yek-tellaw";
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
 
-        String keyStore = FileUtils.readFileToString(new File("C:\\Users\\Administrator\\Desktop\\keystore_f71cecf62f794fa3be9d46092bbfc5fc.json"), "UTF-8");
-        Credentials credentials = ETHWalletUtils.loadCredentialsByKeystore(keyStore, walletKey + "f71cecf62f794fa3be9d46092bbfc5fc");
+        EthService ethService = new EthService();
+        String hash = ethService.sendEthTokenTransaction(
+                "0xd6204879eE209C3513243813004a5763Daf5c4d1",
+                "0xB6Ae85cF6924a1436C89DBe1c91013C7e8dCeb70",
+                "0x7508b4571892d4e04E9aacdf8cC3F2A66949a1F3",
+                BigDecimal.valueOf(10000),
+                "0f33deb9244e239531333643fe58fc77bb4663819546cbdc062767156eeb13bc").getTransactionHash();
 
-        String address = credentials.getAddress();
-        String privateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
-
-        System.out.println(address);
-        System.out.println(privateKey);
-
+        System.out.println(hash);
 
     }
+
+
 }

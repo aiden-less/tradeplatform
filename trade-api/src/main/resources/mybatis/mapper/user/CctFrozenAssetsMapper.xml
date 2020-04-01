@@ -17,10 +17,5 @@
         AND coin_id = #{coinId}
     </update>
 
-    <select id="listRefund" resultMap="cctFrozenAssetsMap">
-        SELECT a.id,a.coin_id,a.user_id,a.assets_amount,a.if_refund,a.create_time
-          FROM cct_frozen_assets a LEFT join cct_order b on a.order_id = b.id
-          WHERE a.if_refund = FALSE AND b.status = #{status}
-    </select>
 
 </mapper>

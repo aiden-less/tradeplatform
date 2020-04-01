@@ -1,17 +1,17 @@
 package com.converage.service.user;
 
-import com.converage.architecture.dto.Pagination;
-import com.converage.architecture.dto.TotalResult;
+import com.alibaba.fastjson.JSONObject;
 import com.converage.architecture.exception.BusinessException;
-import com.converage.architecture.exception.LoginException;
 import com.converage.architecture.service.BaseService;
 import com.converage.architecture.utils.JwtUtils;
 import com.converage.entity.assets.CctAssets;
 import com.converage.entity.chain.MainNetInfo;
+import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.chain.WalletConfig;
 import com.converage.entity.market.TradeCoin;
 import com.converage.entity.wallet.WalletAccount;
 import com.converage.service.common.GlobalConfigService;
+import com.converage.service.wallet.BtcService;
 import com.converage.service.wallet.EthService;
 import com.converage.utils.*;
 import com.converage.client.RedisClient;
@@ -29,11 +29,8 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
-
-import static com.converage.constance.SettlementConst.*;
 
 @Slf4j
 @Service
@@ -57,12 +54,12 @@ public class UserService extends BaseService {
     @Autowired
     private UserSendService userSendService;
 
-    @Autowired
-    private UserAssetsService userAssetsService;
 
     @Autowired
     private GlobalConfigService globalConfigService;
 
+    @Autowired
+    private BtcService btcService;
 
     @Autowired
     private EthService ethService;
@@ -100,12 +97,10 @@ public class UserService extends BaseService {
             ValueCheckUtils.notEmpty(msgCode, "请输入验证码");
         }
 
-
         User userPo = selectOneByWhereString(User.User_account + "=", userAccount, User.class);
         if (userPo != null) {
             throw new BusinessException("该账号已注册");
         }
-
 
         User registerUser = new User();
         registerUser.setPhoneNumber(phoneNumber);
@@ -141,19 +136,39 @@ public class UserService extends BaseService {
 
                 ValueCheckUtils.notZero(insertBatch(userAssetList, false), errorMsg);
 
-                String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
-                WalletAccount walletAccount = ETHWalletUtils.generateMnemonic(WalletConfig.ETH, registerUserId, walletKey + registerUserId);
-//                String toAddress = walletAccount.getAddress();
-//                String privateKey = walletAccount.getPrivateKey();
-//
-//                for (MainNetInfo mainNetInfo : mainNetInfoList) {
-//                    MainNetUserAddr mainNetUserAddr = new MainNetUserAddr();
-//                    mainNetUserAddr.setMainNetId(mainNetInfo.getId());
-//                    mainNetUserAddr.setUserId(registerUserId);
-//                    mainNetUserAddr.setMainNetAddr(toAddress);
-//                    mainNetUserAddr.setPrivateKey(privateKey);
-//                    ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
-//                }
+
+                for (MainNetInfo mainNetInfo : mainNetInfoList) {
+                    MainNetUserAddr mainNetUserAddr = new MainNetUserAddr();
+                    mainNetUserAddr.setMainNetId(mainNetInfo.getId());
+                    mainNetUserAddr.setUserId(registerUserId);
+
+                    String address = null;
+                    String privateKey = null;
+                    if (WalletConfig.BTC.equals(mainNetInfo.getNetName())) {
+                        try {
+                            address = JSONObject.toJSONString(btcService.getNewAddress());
+                            privateKey = JSONObject.toJSONString(btcService.getPrivateAddress(address));
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    }
+
+                    if (WalletConfig.ETH.equals(mainNetInfo.getNetName())) {
+                        try {
+                            String walletKey = globalConfigService.get(GlobalConfigService.Enum.WALLET_KEY);
+                            WalletAccount walletAccount = ETHWalletUtils.generateMnemonic(WalletConfig.ETH, registerUserId, walletKey + registerUserId);
+                            address = walletAccount.getAddress();
+                            privateKey = walletAccount.getPrivateKey();
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    }
+
+
+                    mainNetUserAddr.setMainNetAddr(address);
+                    mainNetUserAddr.setPrivateKey(AesUtils.encrypt(privateKey,WalletConfig.PrivKeyRule));
+                    ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
+                }
             }
         });
 
@@ -241,51 +256,6 @@ public class UserService extends BaseService {
         return user1;
     }
 
-    /**
-     * 获取用户所有信息
-     *
-     * @param userId
-     * @return
-     */
-    public User allUserInfo(String userId) {
-        User user = null;
-        if (user == null) {
-            throw new LoginException();
-        }
-
-        Map<String, Object> orderMap = ImmutableMap.of(
-                Certification.Create_time, CommonConst.MYSQL_DESC
-        );
-        List<Certification> certificationList = selectListByWhereString(Certification.User_id + "= ", userId, Certification.class, orderMap);
-        Certification certificationPo = null;
-
-        if (certificationList.size() > 0) {
-            certificationPo = certificationList.get(0);
-        }
-
-
-        BigDecimal decimal1 = userAssetsService.getAssetsAmountBySettlementId(userId, SETTLEMENT_STATIC_CURRENCY);
-        BigDecimal decimal2 = userAssetsService.getAssetsAmountBySettlementId(userId, SETTLEMENT_DYNAMIC_CURRENCY);
-
-        BigDecimal computePower = decimal1.add(decimal2);
-
-
-        if (StringUtils.isEmpty(user.getPayPassword())) {
-            user.setIfSettlePayPwd(false);
-        } else {
-            user.setIfSettlePayPwd(true);
-        }
-        user.setPassword("");
-        user.setPayPassword("");
-
-        return user;
-    }
-
-
-    public User getById(String userId) {
-        return userService.selectOneById(userId, User.class);
-    }
-
 
     /**
      * 更新用户信息
@@ -302,9 +272,6 @@ public class UserService extends BaseService {
         }
 
     }
-
-
-
 
 
     /**

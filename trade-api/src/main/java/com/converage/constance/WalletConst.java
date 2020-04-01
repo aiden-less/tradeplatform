@@ -11,9 +11,12 @@ import java.io.IOException;
 
 @Component
 public class WalletConst {
+    public static final String ETH_MAIN_NET = "https://mainnet.infura.io/v3/eac43464a30d4fcc890f3656e8290e45";
+    public static final String ETH_TEST_NET = "https://rinkeby.infura.io/v3/eac43464a30d4fcc890f3656e8290e45";
 
 
     public static void main(String[] args) throws IOException {
+
 //        String walletKey = "ts-yek-tellaw";
 //
 //        String keyStore = FileUtils.readFileToString(new File("F:\\keystore_71ff6c15d2ca409dac04682b85f0538b.json"), "UTF-8");

@@ -200,7 +200,7 @@ public class TransactionService {
 
 
     public int decreaseOrderSurplusNumber(String orderId, BigDecimal number, List<String> finishIdList) {
-        StringBuffer sql = new StringBuffer("UPDATE assets_transaction_order SET transaction_surplus_number = transaction_surplus_number - ?");
+        StringBuilder sql = new StringBuilder("UPDATE assets_transaction_order SET transaction_surplus_number = transaction_surplus_number - ?");
         if (finishIdList.contains(orderId)) {
             sql.append(",status = ").append(TransactionEnum.FINISH.getType());
         }

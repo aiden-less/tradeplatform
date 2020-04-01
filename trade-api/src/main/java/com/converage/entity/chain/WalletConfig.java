@@ -1,10 +1,9 @@
 package com.converage.entity.chain;
 
 import com.alibaba.fastjson.JSONObject;
+import com.converage.architecture.mybatis.annotation.Column;
 import com.converage.architecture.mybatis.annotation.Id;
-import com.converage.constance.WalletConst;
-import com.converage.jdbc.annotation.Column;
-import com.converage.jdbc.annotation.Table;
+import com.converage.architecture.mybatis.annotation.Table;
 import lombok.Data;
 import org.apache.commons.io.FileUtils;
 
@@ -19,9 +18,12 @@ import java.io.Serializable;
 @Table(name = "wallet_config")
 public class WalletConfig implements Serializable {
 
+    public static String PrivKeyRule = "O^QYl@Sjx@L3UYBT";
+
+    public static String BTC = "BTC";
     public static String ETH = "ETH";
     public static String USDT = "USDT";
-    public static String BTC = "BTC";
+
 
 
     private static final long serialVersionUID = -8045584506645472898L;

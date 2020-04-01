@@ -112,14 +112,6 @@ public class UserSendService extends BaseService {
             case UserConst.MSG_CODE_TYPE_RESET_PAYPWD:
                 msgTypeStr = "【重置支付密码】";
                 break;
-            case UserConst.MSG_CODE_TYPE_UNBIND_PHONE:
-                userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
-                user = userService.getById(userId);
-                if (user == null || !phoneNumber.equals(user.getPhoneNumber())) {
-                    throw new BusinessException("解绑手机号码和已绑定手机号码不一致");
-                }
-                msgTypeStr = "【解绑手机号码】";
-                break;
             case UserConst.MSG_CODE_TYPE_CHANGE_PHONE:
                 userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
 //                user = userService.selectOneByWhereString(User.Phone_number + " = ", phoneNumber, User.class);

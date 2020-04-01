@@ -26,8 +26,8 @@ public class UserAssetsCharge implements Serializable{
     @Column(name = Record_type)
     private Integer recordType; //记录类型
 
-    @Column(name = Settlement_id)
-    private Integer settlementId; //支付类型
+    @Column(name = Coin_id)
+    private String coinId; //支付类型
 
     @Column(name = Record_amount)
     private BigDecimal recordAmount; //记录金额
@@ -82,7 +82,7 @@ public class UserAssetsCharge implements Serializable{
     public static final String Id = "id";
     public static final String User_id = "user_id";
     public static final String Record_type = "record_type";
-    public static final String Settlement_id = "settlement_id";
+    public static final String Coin_id = "coin_id";
     public static final String Record_amount = "record_amount";
     public static final String Poundage_amount = "poundage_amount";
     public static final String Status = "status";

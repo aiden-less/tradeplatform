@@ -207,7 +207,7 @@ public class OrderService extends BaseService {
                     ValueCheckUtils.notZero(orderMapper.updateOrder4Pay(userId, orderId, settlementId, orderPrice, ORDER_STATUS_NONE_SEND), errorMsg);
                     ValueCheckUtils.notZero(orderMapper.updateOrderItem4Pay(orderId, orderPrice), errorMsg);
                     String detailStr = "商城购物支付,订单号为:" + orderInfo.getOrderNo();
-                    ValueCheckUtils.notZero(userAssetsService.decreaseUserAssets(userId, orderPrice, settlementId), "用户资产不足");
+//                    ValueCheckUtils.notZero(userAssetsService.decreaseUserAssets(userId, orderPrice, settlementId), "用户资产不足");
                     assetsTurnoverService.createAssetsTurnover(userId, TURNOVER_TYPE_GOODS, orderPrice, userId, COMPANY_ID, settlementId, detailStr);
                 }
             }
@@ -397,7 +397,7 @@ public class OrderService extends BaseService {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
                 if (currencyReward.compareTo(BigDecimal.ZERO) > 0) {
-                    userAssetsService.increaseUserAssets(userId, currencyReward, SETTLEMENT_CURRENCY);
+//                    userAssetsService.increaseUserAssets(userId, currencyReward, SETTLEMENT_CURRENCY);
                     assetsTurnoverService.createAssetsTurnover(
                             userId, TURNOVER_TYPE_GOODS, currencyReward, COMPANY_ID, userId, SETTLEMENT_CURRENCY, "商城购物商品品值奖励"
                     );

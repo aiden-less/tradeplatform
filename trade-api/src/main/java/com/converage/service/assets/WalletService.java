@@ -78,7 +78,7 @@ public class WalletService extends BaseService {
 
     public List list(TradeCoin wallet, Pagination pagination) throws IOException {
         Class clazz = TradeCoin.class;
-        Map<String, Object> orderMap = ImmutableMap.of(TradeCoin.Settlement_id, CommonConst.MYSQL_ASC);
+        Map<String, Object> orderMap = ImmutableMap.of(TradeCoin.Coin_name, CommonConst.MYSQL_ASC);
         Map<String, Object> whereMap = ImmutableMap.of(
                 TradeCoin.If_valid + "=", true);
 

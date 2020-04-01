@@ -5,6 +5,7 @@ import com.converage.architecture.exception.EntityLackTableAnnotationException;
 import com.converage.architecture.mybatis.annotation.Column;
 import com.converage.architecture.mybatis.annotation.Id;
 import com.converage.architecture.mybatis.annotation.Table;
+import com.converage.entity.chain.WalletConfig;
 import com.converage.entity.user.MsgRecord;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -88,10 +89,11 @@ public class MybatisBuildUtil {
         return buildMapperParam4SelectListByWhere(selectiveFieldList, null, pagination, clazz, orderMap);
     }
 
-    public static void main(String[] args) throws IllegalAccessException, InstantiationException {
-        Class clazz = MsgRecord.class;
-        Object object = clazz.newInstance();
-        System.out.println(object);
+    public static void main(String[] args) throws IllegalAccessException, InstantiationException, EntityLackTableAnnotationException {
+        Table table = WalletConfig.class.getAnnotation(Table.class);
+        if (table == null) {
+            throw new EntityLackTableAnnotationException(WalletConfig.class.getName() + " need table annotation");
+        }
     }
 
 }

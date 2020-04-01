@@ -2,6 +2,7 @@ package com.converage.init;
 
 import com.converage.architecture.service.BaseService;
 import com.converage.entity.chain.WalletConfig;
+import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 @Component
 public class WalletConfigInit {
 
-    public static Map<String, WalletConfig> map;
+    public static Map<String, WalletConfig> map = new HashedMap();
 
     @Autowired
     private BaseService baseService;

@@ -1,5 +1,6 @@
 package com.converage.service.assets;
 
+import com.converage.mapper.user.CctAssetsMapper;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.dto.Pagination;
 import com.converage.architecture.dto.TotalResult;
@@ -25,11 +26,13 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import static com.converage.constance.AssetTurnoverConst.*;
 import static com.converage.constance.SettlementConst.*;
 
@@ -43,7 +46,7 @@ public class RechargeService extends BaseService {
     private AliOSSBusiness aliOSSBusiness;
 
     @Autowired
-    private UserAssetsService userAssetsService;
+    private CctAssetsMapper cctAssetsMapper;
 
     @Autowired
     private AssetsTurnoverService assetsTurnoverService;
@@ -84,7 +87,7 @@ public class RechargeService extends BaseService {
 //        ValueCheckUtils.notEmpty(ethGetBalance, "您的钱包地址有误，请确认");
 
 
-        TradeCoin wallet = selectOneByWhereString(TradeCoin.Settlement_id + "=", settlementId, TradeCoin.class);
+        TradeCoin wallet = selectOneByWhereString(TradeCoin.Id + "=", settlementId, TradeCoin.class);
         if (!wallet.getIfRecharge()) {
             throw new BusinessException("该资产暂不支持充值");
         }
@@ -101,7 +104,6 @@ public class RechargeService extends BaseService {
         userAssetsCharge.setRecordPic(aliOSSBusiness.uploadCommonPic(rechargeFile));
         userAssetsCharge.setUserId(userId);
         userAssetsCharge.setRecordType(SettlementConst.USERASSETS_RECHARGE);
-        userAssetsCharge.setSettlementId(settlementId);
         userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE);
         userAssetsCharge.setRecordAmount(rechargeAmount);
         String detailStr = "转出地址：" + fromAddress + "，转入地址：" + sendWalletAddress;
@@ -135,8 +137,7 @@ public class RechargeService extends BaseService {
 
         String chargeId = userAssetsCharge.getId();
         String userId = userAssetsCharge.getUserId();
-        Integer settlementId = userAssetsCharge.getSettlementId();
-        User user = userService.getById(userId);
+        String coinId = userAssetsCharge.getCoinId();
 
         Map<String, Object> whereMap = ImmutableMap.of(
                 UserAssetsCharge.User_id + "=", userAssetsCharge.getUserId(),
@@ -160,7 +161,7 @@ public class RechargeService extends BaseService {
                     userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
                     userAssetsCharge.setRecordAmount(amount);
 
-                    ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, amount, settlementId), errorMsg);
+                    ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, amount, coinId), errorMsg);
                 } else {
                     userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
                 }
@@ -193,7 +194,6 @@ public class RechargeService extends BaseService {
 
 
         String userId = userAssetsCharge.getUserId();
-        User user = userService.getById(userId);
 
 
         String auditStr = getAuditString(auditStatus);
@@ -202,7 +202,7 @@ public class RechargeService extends BaseService {
             remark = String.format("; 管理员: %s 于 %s 审核 %s", subscriber.getUserName(), MineDateUtils.getCurDateFormat(), auditStr);
         }
 
-        Integer settlementId = userAssetsCharge.getSettlementId();
+        String coinId = userAssetsCharge.getCoinId();
         userAssetsCharge.setRemark(userAssetsCharge.getRemark() + remark);
 
         String errorMsg = "审核失败";
@@ -223,7 +223,7 @@ public class RechargeService extends BaseService {
                     assetsTurnover.setTurnoverAmount(recordAmount);
 
                     ValueCheckUtils.notZero(updateIfNotNull(assetsTurnover), errorMsg);
-                    ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, recordAmount, settlementId), errorMsg);
+                    ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, recordAmount, coinId), errorMsg);
                 } else {
                     userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
                 }
@@ -250,22 +250,22 @@ public class RechargeService extends BaseService {
 //        }
 
 
-        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, rechargeAmount, rechargeSettlementId), "充值失败");
-
-                UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
-                userAssetsCharge.setUserId(userId);
-                userAssetsCharge.setRecordType(SettlementConst.USERASSETS_RECHARGE);
-                userAssetsCharge.setRecordAmount(rechargeAmount);
-                userAssetsCharge.setSettlementId(rechargeSettlementId);
-                userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
-                userAssetsCharge.setRemark("后台用户[" + userName + "],进行充值");
-                ValueCheckUtils.notZero(insertIfNotNull(userAssetsCharge), "充值失败");
-
-            }
-        });
+//        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+//            @Override
+//            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+//                ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, rechargeAmount, rechargeSettlementId), "充值失败");
+//
+//                UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
+//                userAssetsCharge.setUserId(userId);
+//                userAssetsCharge.setRecordType(SettlementConst.USERASSETS_RECHARGE);
+//                userAssetsCharge.setRecordAmount(rechargeAmount);
+//                userAssetsCharge.setSettlementId(rechargeSettlementId);
+//                userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
+//                userAssetsCharge.setRemark("后台用户[" + userName + "],进行充值");
+//                ValueCheckUtils.notZero(insertIfNotNull(userAssetsCharge), "充值失败");
+//
+//            }
+//        });
     }
 
     /**
