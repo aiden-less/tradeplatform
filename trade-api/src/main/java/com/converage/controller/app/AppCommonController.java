@@ -1,5 +1,6 @@
 package com.converage.controller.app;
 
+import com.converage.service.wallet.BtcService;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.dto.Result;
 import com.converage.architecture.utils.ResultUtils;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import sun.misc.BASE64Encoder;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -32,6 +34,8 @@ public class AppCommonController {
     @Autowired
     private AppUpgradeService appUpgradeService;
 
+    @Autowired
+    private BtcService btcService;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -97,4 +101,15 @@ public class AppCommonController {
     }
 
 
+    @RequestMapping("btc")
+    public Result<?> btc(String str) throws Throwable {
+        btcService.syncBtcBlock();
+//        Object o = btcService.getBlockChainInfo();
+//        Object o = btcService.rawSignAndSend(
+//                "2N4GXdGCYzxrRZnmwAJSNbDjkxDRSZg4rsg",
+//                "2N9b1Cm71o4ui4oADVQk2Vd5ZkLStFhRp9P",
+//                "2N4GXdGCYzxrRZnmwAJSNbDjkxDRSZg4rsg",
+//                BigDecimal.valueOf(0.002).pow(8).longValue());
+        return ResultUtils.success();
+    }
 }

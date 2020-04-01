@@ -48,8 +48,6 @@ public class AdminUserController {
     @Autowired
     private CertificationService certificationService;
 
-    @Autowired
-    private BankCardService bankCardService;
 
     @Autowired
     private RechargeService rechargeService;
@@ -68,16 +66,6 @@ public class AdminUserController {
 
     @Autowired
     private UserMessageService userMessageService;
-
-    /**
-     * 用户信息
-     *
-     * @return
-     */
-    @GetMapping("info/{userId}")
-    public Result<?> info(@PathVariable String userId) {
-        return ResultUtils.success(userService.allUserInfo(userId));
-    }
 
     /**
      * 修改用户信息
@@ -263,39 +251,39 @@ public class AdminUserController {
 //        ExportUtils.exportToExcel07(response, "充提转.xlsx", dataSource);
 //    }
 
-    /**
-     * 资金流水 充提转
-     */
-    @PostMapping("export/assetsTurnover")
-    public void exportAssets(@RequestBody Pagination<AssetsTurnover> pagination, HttpServletResponse response) {
-        pagination.setPageSize(ExportUtils.SHEET_MAX_MEMORY_ROW_SIZE);
-        ExportUtils.ExportDataSource<AssetsTurnover> dataSource = new ExportUtils.ExportDataSource<AssetsTurnover>() {
-            List<AssetsTurnover> result = null;
-
-            public List<AssetsTurnover> load(int pageNo, int pageSize) {
-                return assetsTurnoverService.getByPage(pagination).getList();
-            }
-
-            public String[] getColumnTitles() {
-                return new String[]{"用户名", "手机号码", "资金类型", "交易类型", "收入支出", "数目", "操作后", "创建时间", "详情"};
-            }
-
-            public long count() {
-                return result.size();
-            }
-
-            public Object[] convert(AssetsTurnover assetsTurnover) {
-                return new Object[]{assetsTurnover.getUserAccount(), assetsTurnover.getPhoneNumber(),
-                        userAssetsService.getSettlementNameById(assetsTurnover.getSettlementId()),
-                        assetsTurnover.getTurnoverTitle(),
-                        AssetsTurnoverService.getInOutType(assetsTurnover.getInOutType()), assetsTurnover.getTurnoverAmount(),
-                        assetsTurnover.getAfterAmount(), assetsTurnover.getCreateTime(),
-                        assetsTurnover.getDetailStr()
-                };
-            }
-        };
-        ExportUtils.exportToExcel07(response, "资产流水.xlsx", dataSource);
-    }
+//    /**
+//     * 资金流水 充提转
+//     */
+//    @PostMapping("export/assetsTurnover")
+//    public void exportAssets(@RequestBody Pagination<AssetsTurnover> pagination, HttpServletResponse response) {
+//        pagination.setPageSize(ExportUtils.SHEET_MAX_MEMORY_ROW_SIZE);
+//        ExportUtils.ExportDataSource<AssetsTurnover> dataSource = new ExportUtils.ExportDataSource<AssetsTurnover>() {
+//            List<AssetsTurnover> result = null;
+//
+//            public List<AssetsTurnover> load(int pageNo, int pageSize) {
+//                return assetsTurnoverService.getByPage(pagination).getList();
+//            }
+//
+//            public String[] getColumnTitles() {
+//                return new String[]{"用户名", "手机号码", "资金类型", "交易类型", "收入支出", "数目", "操作后", "创建时间", "详情"};
+//            }
+//
+//            public long count() {
+//                return result.size();
+//            }
+//
+//            public Object[] convert(AssetsTurnover assetsTurnover) {
+//                return new Object[]{assetsTurnover.getUserAccount(), assetsTurnover.getPhoneNumber(),
+//                        userAssetsService.getSettlementNameById(assetsTurnover.getSettlementId()),
+//                        assetsTurnover.getTurnoverTitle(),
+//                        AssetsTurnoverService.getInOutType(assetsTurnover.getInOutType()), assetsTurnover.getTurnoverAmount(),
+//                        assetsTurnover.getAfterAmount(), assetsTurnover.getCreateTime(),
+//                        assetsTurnover.getDetailStr()
+//                };
+//            }
+//        };
+//        ExportUtils.exportToExcel07(response, "资产流水.xlsx", dataSource);
+//    }
 
     /**
      * 发送后台用户登录短信验证码

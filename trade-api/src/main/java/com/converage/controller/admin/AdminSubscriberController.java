@@ -106,7 +106,7 @@ public class AdminSubscriberController {
 
     @RequestMapping("turnoverCountAmount")
     public Result<?> turnoverCountAmount() {
-        return ResultUtils.success(userAssetsService.countTurnoverAmount());
+        return ResultUtils.success();
     }
 
     /**
