@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 public class CctKline {
 
     private String id;
+    private String type;
     private BigDecimal fresh; //最新价
     private BigDecimal open; //开盘价
     private BigDecimal close; //收盘价

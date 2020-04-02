@@ -27,9 +27,14 @@ public enum RedisKeyEnum {
     }
 
 
-    public String getCctTradePairNews(String valuationCoinName) {
+    public String getCctTradePairNews(String valuationCoinId) {
 
-        return this.key + "_" + valuationCoinName;
+        return this.key + "_" + valuationCoinId;
 
+    }
+
+
+    public String getCollectTradePairNews(String userId) {
+        return this.key + "_" + userId;
     }
 }

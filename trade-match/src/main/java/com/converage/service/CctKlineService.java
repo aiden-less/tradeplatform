@@ -51,6 +51,7 @@ public class CctKlineService {
             BigDecimal freshPrice = cctKlineSave.getFresh();
 
             cctKlineSave.setId(UUID.randomUUID().toString().replace("-", ""));
+            cctKlineSave.setType(enumEnum.getType());
             cctKlineSave.setOpen(cctKline.getClose());
             cctKlineSave.setClose(cctKline.getFresh());
             cctKlineSave.setHigh(cctKline.getHigh());
@@ -67,21 +68,21 @@ public class CctKlineService {
 
                 //新增五分钟线
                 case FiveMinute:
-                    if (now.getMinute() / 5 == 0) {
+                    if (now.getMinute() % 5 == 0) {
                         mongoTemplate.save(cctKlineSave);
                     }
                     break;
 
                 //新增十五分钟线
                 case FifteenMinute:
-                    if (now.getMinute() / 15 == 0) {
+                    if (now.getMinute() % 15 == 0) {
                         mongoTemplate.save(cctKlineSave);
                     }
                     break;
 
                 //新增三十分钟线
                 case ThirtyMinute:
-                    if (now.getMinute() / 30 == 0) {
+                    if (now.getMinute() % 30 == 0) {
                         mongoTemplate.save(cctKlineSave);
                     }
                     break;
@@ -95,7 +96,7 @@ public class CctKlineService {
 
                 //新增四小时线
                 case FourHours:
-                    if (now.getMinute() == 0) {
+                    if (now.getHour() % 4 == 0) {
                         mongoTemplate.save(cctKlineSave);
                     }
                     break;
@@ -130,8 +131,8 @@ public class CctKlineService {
             redisClient.put(redisKey, type, cctKline);
 
         }
-
     }
+
 
     //更新最新的K线缓存最高最低价，成交量
     public void updateKline(TradePair tradePair, BigDecimal doneUnit, BigDecimal doneNumber) {
@@ -142,7 +143,7 @@ public class CctKlineService {
         String tradePairId = tradePair.getId();
         String tradeCoinName = tradePair.getTradeCoinName();
         String valuationCoinName = tradePair.getValuationCoinName();
-
+        String valuationCoinId = tradePair.getValuationCoinId();
 
         for (int i = 0; i < KlineTypeEnum.values().length; i++) {
             KlineTypeEnum enumEnum = KlineTypeEnum.values()[i];
@@ -179,7 +180,7 @@ public class CctKlineService {
                 redisClient.add(RedisKeyEnum.CctRafRate.getKey(), cctRafRate, rafRate);
 
                 //更新交易对行情
-                String tradePairNewsKey = RedisKeyEnum.CctTradePairNews.getCctTradePairNews(valuationCoinName);
+                String tradePairNewsKey = RedisKeyEnum.CctTradePairNews.getCctTradePairNews(valuationCoinId);
                 TradePairNews tradePairNews = (TradePairNews) redisClient.getHashKey(tradePairNewsKey, tradeCoinName);
                 tradePairNews.setFreshPrice(doneUnit);
                 tradePairNews.setRafRate(rafRate);

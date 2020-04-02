@@ -77,13 +77,6 @@ public class UserService extends BaseService {
         String phoneNumber = paramUser.getPhoneNumber();
         ValueCheckUtils.notEmpty(phoneNumber, "请输入手机号");
 
-        String userAccount = paramUser.getUserAccount();
-        ValueCheckUtils.notEmpty(userAccount, "请输入账号");
-
-        String userAccountMatches = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$";
-        if (!userAccount.matches(userAccountMatches)) {
-            throw new BusinessException("账号须由6-16位的数字加字母组合");
-        }
 
         String passwordMatches = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$";
         String password = paramUser.getPassword();
@@ -97,14 +90,13 @@ public class UserService extends BaseService {
             ValueCheckUtils.notEmpty(msgCode, "请输入验证码");
         }
 
-        User userPo = selectOneByWhereString(User.User_account + "=", userAccount, User.class);
+        User userPo = selectOneByWhereString(User.Phone_number + "=", phoneNumber, User.class);
         if (userPo != null) {
-            throw new BusinessException("该账号已注册");
+            throw new BusinessException("该手机号已注册");
         }
 
         User registerUser = new User();
         registerUser.setPhoneNumber(phoneNumber);
-        registerUser.setUserAccount(userAccount);
         registerUser.setPassword(MD5Utils.MD5Encode(password));
         String inviteCode = paramUser.getInviteCode();
 
@@ -166,7 +158,7 @@ public class UserService extends BaseService {
 
 
                     mainNetUserAddr.setMainNetAddr(address);
-                    mainNetUserAddr.setPrivateKey(AesUtils.encrypt(privateKey,WalletConfig.PrivKeyRule));
+                    mainNetUserAddr.setPrivateKey(AesUtils.encrypt(privateKey, WalletConfig.PrivKeyRule));
                     ValueCheckUtils.notZero(insert(mainNetUserAddr), errorMsg);
                 }
             }

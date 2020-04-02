@@ -30,6 +30,21 @@ public class AppCctController {
     private RSAService rsaService;
 
 
+    //币币交易主页
+    @RequestMapping("home")
+    public Result<?> home() {
+
+        return ResultUtils.success();
+    }
+
+    //已成交订单
+    @RequestMapping("order/finish")
+    public Result<?> listTradingOrder() {
+
+        return ResultUtils.success();
+    }
+
+
     //创建挂单
     @RequestMapping("order/create")
     public Result<?> transactionTrade(HttpServletRequest request, String desKeyStr, String paramStr) throws Exception {

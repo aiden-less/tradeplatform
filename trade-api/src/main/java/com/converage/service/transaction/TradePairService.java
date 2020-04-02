@@ -39,11 +39,11 @@ public class TradePairService extends BaseService {
 
         List<TradePairNews> tradePairNewsList = new ArrayList<>();
         for (TradePair tradePair : list) {
-            String tradeCoinName = tradePair.getTradeCoinName();
-            String valuationCoinName = tradePair.getValuationCoinName();
+            String tradeCoinId = tradePair.getTradeCoinId();
+            String valuationCoinId = tradePair.getValuationCoinId();
 
-            String redisKey = RedisKeyEnum.CctTradePairNews.getCctTradePairNews(valuationCoinName);
-            TradePairNews tradePairNews = (TradePairNews) redisClient.getHashKey(redisKey, tradeCoinName);
+            String redisKey = RedisKeyEnum.CctTradePairNews.getCctTradePairNews(valuationCoinId);
+            TradePairNews tradePairNews = (TradePairNews) redisClient.getHashKey(redisKey, tradeCoinId);
             tradePairNewsList.add(tradePairNews);
 
         }

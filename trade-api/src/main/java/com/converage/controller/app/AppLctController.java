@@ -20,6 +20,14 @@ public class AppLctController {
     @Autowired
     private LctService lctService;
 
+    //法币交易主页
+    @RequestMapping("home")
+    public Result<?> home() {
+
+
+        return ResultUtils.success();
+    }
+
 
     // 创建订单
     @RequestMapping("order/create")
