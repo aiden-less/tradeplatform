@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 @Alias("BankInfo")
 @Table(name = "bank_info")
 public class BankInfo  implements Serializable {
+    private static final long serialVersionUID = -837265169479137118L;
     @Id
     @Column(name = Id)
     private String id;

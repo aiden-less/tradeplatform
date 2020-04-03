@@ -109,7 +109,6 @@ public class UserService extends BaseService {
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
                 userSendService.cancelMsgCode(userSendService.validateMsgCode(phoneNumber, msgCode, UserConst.MSG_CODE_TYPE_INVITEREGISTER));
 
-                registerUser.setUserName(phoneNumber.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
                 registerUser.setCreateTime(new Timestamp(System.currentTimeMillis()));
 
 
@@ -192,12 +191,6 @@ public class UserService extends BaseService {
         user1.setAccessToken(JwtUtils.createAppToken(user1));
 
 
-        if (StringUtils.isEmpty(user1.getInviteId())) {
-            user1.setIfSettleInviteCode(false);
-        } else {
-            user1.setIfSettleInviteCode(true);
-        }
-
         return user1;
     }
 
@@ -209,43 +202,21 @@ public class UserService extends BaseService {
         ValueCheckUtils.notEmpty(password, "请输入密码");
 
         Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put(User.User_account + "=", userAccount);
+        User user = selectOneByWhereMap(paramMap, User.class);
 
-        User user1;
-        String userAccountMatches = "^[0-9]{11,12}$";
-        if (userAccount.matches(userAccountMatches)) {
-            Map<String, Object> orderMap = ImmutableMap.of(User.Create_time, CommonConst.MYSQL_ASC);
-            paramMap.put(User.Phone_number + "=", userAccount);
-            List<User> userList = selectListByWhereMap(paramMap, User.class, orderMap);
-            if (userList.size() > 0) {
-                user1 = userList.get(0);
-            } else {
-                throw new BusinessException("未注册手机号");
-            }
-        } else {
-            paramMap.put(User.User_account + "=", userAccount);
-            user1 = selectOneByWhereMap(paramMap, User.class);
-        }
+        ValueCheckUtils.notEmpty(user, "未注册账号");
 
-        ValueCheckUtils.notEmpty(user1, "未注册账号");
 
-        user1.setIfFreePayPwd(false);
-        update(user1);
-
-        if (!user1.getPassword().equals(MD5Utils.MD5Encode(password))) {
+        if (!user.getPassword().equals(MD5Utils.MD5Encode(password))) {
             throw new BusinessException("密码错误");
         }
 
-        user1.setPassword("");
-        user1.setPayPassword("");//敏感信息不返回
-        user1.setAccessToken(JwtUtils.createAppToken(user1));
+        user.setPassword("");
+        user.setPayPassword("");//敏感信息不返回
+        user.setAccessToken(JwtUtils.createAppToken(user));
 
-
-        if (StringUtils.isEmpty(user1.getInviteId())) {
-            user1.setIfSettleInviteCode(false);
-        } else {
-            user1.setIfSettleInviteCode(true);
-        }
-        return user1;
+        return user;
     }
 
 

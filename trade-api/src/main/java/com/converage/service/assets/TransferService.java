@@ -1,29 +1,12 @@
 package com.converage.service.assets;
 
-import com.google.common.collect.ImmutableMap;
-import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
-import com.converage.constance.SettlementConst;
-import com.converage.entity.assets.UserAssetsCharge;
-import com.converage.entity.market.TradeCoin;
-import com.converage.entity.user.User;
 import com.converage.service.common.GlobalConfigService;
 import com.converage.service.user.AssetsTurnoverService;
-import com.converage.service.user.UserAssetsService;
 import com.converage.service.user.UserService;
-import com.converage.utils.DESUtils;
-import com.converage.utils.EncryptUtils;
-import com.converage.utils.ValueCheckUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.math.BigDecimal;
-import java.util.Map;
-
-import static com.converage.constance.AssetTurnoverConst.TURNOVER_TYPE_TRANSFER;
 
 @Service
 public class TransferService extends BaseService {
@@ -106,7 +89,7 @@ public class TransferService extends BaseService {
 //            throw new BusinessException("不能向自己转账");
 //        }
 //
-//        UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
+//        CctFinanceLog userAssetsCharge = new CctFinanceLog();
 //        userAssetsCharge.setUserId(userId);
 //
 //        //扣除手续费

@@ -22,12 +22,6 @@ public class User extends EncryptEntity implements Serializable { //用户信息
     @Column(name = Id)
     public String id;
 
-    @Column(name = Head_picture_url)
-    private String headPictureUrl; //头像图片url
-
-    @Column(name = User_name)
-    private String userName; //用户昵称
-
     @Column(name = User_account)
     private String userAccount; //账号
 
@@ -56,7 +50,7 @@ public class User extends EncryptEntity implements Serializable { //用户信息
     private Boolean ifFreePayPwd; //是否免密支付
 
     @Column(name = If_can_otc)
-    private Boolean ifCanOtc; //是否可以OTC交易
+    private Boolean ifCanOtc; //是否可以交易
 
     @Column(name = If_can_recharge)
     private Boolean ifCanRecharge; //是否可以充值
@@ -68,18 +62,11 @@ public class User extends EncryptEntity implements Serializable { //用户信息
     private Boolean ifCanTransfer; //是否可以转账
 
     //扩展属性
-    private String userId;
     private String accessToken; //访问token
     private String msgCode; //短信验证码
     private String picCode; //图形验证码
-    private String countryCode; //国家代码
     private Integer msgType; //UserConst.MSG_CODE_TYPE_* 短信验证码类型
-    private String newPassword; //新密码
-    private String oldPassword; //旧密码
-    private Integer updatePwdType; //UserConst.UPDATE_PWD_TYPE_* 修改密码类型
-    private Boolean ifRegister;//是否已注册
-    private Boolean ifSettlePayPwd;//是否有设置支付密码
-    private Boolean ifSettleInviteCode;//是否有邀请码
+
 
     //DB Column name
     public static final String Id = "id";

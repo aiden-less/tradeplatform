@@ -56,20 +56,20 @@ public class AppUserController {
         return ResultUtils.success(userService.createUser(userReq, true), "注册成功");
     }
 
-    @RequestMapping("loginByPhone")
-    public Result<?> loginByPhone(String desKeyStr, String paramStr) throws Exception {
-        User userReq = JSONObject.parseObject(rsaService.decryptParam(desKeyStr, paramStr), User.class);
-        rsaService.checkRequestTimeout(userReq, REQUST_TIME_OUT_SECOND);
-        User userInfo = userService.loginByPhone(userReq);
-        return ResultUtils.success(userInfo, "登录成功");
-    }
+//    @RequestMapping("login")
+//    public Result<?> loginByPhone(String desKeyStr, String paramStr) throws Exception {
+//        User userReq = JSONObject.parseObject(rsaService.decryptParam(desKeyStr, paramStr), User.class);
+//        rsaService.checkRequestTimeout(userReq, REQUST_TIME_OUT_SECOND);
+//        User userInfo = userService.loginByPhone(userReq);
+//        return ResultUtils.success(userInfo, "登录成功");
+//    }
 
     /**
      * 用户登录（账号密码登录）
      *
      * @return
      */
-    @RequestMapping("loginByUserAccount")
+    @RequestMapping("login")
     public Result<?> loginByUserAccount(String desKeyStr, String paramStr) throws Exception {
         User userReq = JSONObject.parseObject(rsaService.decryptParam(desKeyStr, paramStr), User.class);
         User userInfo = userService.loginByUserAccount(userReq);

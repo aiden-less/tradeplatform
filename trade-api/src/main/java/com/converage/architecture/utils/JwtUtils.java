@@ -45,7 +45,6 @@ public class JwtUtils {
     /**
      * token claim userName
      */
-    private static final String TOKEN_CLAIM_USERNAME = "userName";
     private static final String TOKEN_CLAIM_USERID = "userId";
 
 
@@ -67,7 +66,7 @@ public class JwtUtils {
         if (BooleanUtils.isFalse(subscriber.getIfValid())) {
             throw new BusinessException("账号被限制登录");
         }
-        return createToken(subscriber.getUserName(), subscriber.getId(), ADMIN_TOKEN_SECRET, RedisKeyConst.ADMIN_ACCESS_TOKEN);
+        return createToken(subscriber.getId(), ADMIN_TOKEN_SECRET, RedisKeyConst.ADMIN_ACCESS_TOKEN);
     }
 
 
@@ -78,10 +77,10 @@ public class JwtUtils {
      * @return
      */
     public static String createAppToken(User user) {
-        return createToken(user.getUserName(), user.getId(), APP_TOKEN_SECRET, RedisKeyConst.APP_ACCESS_TOKEN);
+        return createToken(user.getId(), APP_TOKEN_SECRET, RedisKeyConst.APP_ACCESS_TOKEN);
     }
 
-    private static String createToken(String userName, String userId, String tokenSecret, String redisKey) {
+    private static String createToken(String userId, String tokenSecret, String redisKey) {
         String token;
         try {
             Date expireDate = DateUtils.addMonths(new Date(), ALIVE_DAY_TIME);
@@ -90,7 +89,6 @@ public class JwtUtils {
             map.put("alg", "HS256");
             map.put("typ", "JWT");
             token = JWT.create().withHeader(map)
-                    .withClaim(TOKEN_CLAIM_USERNAME, userName)
                     .withClaim(TOKEN_CLAIM_USERID, userId)
                     .withExpiresAt(expireDate)
                     .sign(algorithm);
@@ -140,7 +138,6 @@ public class JwtUtils {
         DecodedJWT decodedJWT = getDecodedJWT(token, APP_TOKEN_SECRET);
         User user = new User();
         user.setId(decodedJWT.getClaim(TOKEN_CLAIM_USERID).asString());
-        user.setUserName(decodedJWT.getClaim(TOKEN_CLAIM_USERNAME).asString());
         return user;
     }
 
@@ -160,7 +157,6 @@ public class JwtUtils {
         String id = decodedJWT.getClaim(TOKEN_CLAIM_USERID).asString();
         Subscriber subscriber = new Subscriber();
         subscriber.setId(id);
-        subscriber.setUserName(decodedJWT.getClaim(TOKEN_CLAIM_USERNAME).asString());
         return subscriber;
     }
 

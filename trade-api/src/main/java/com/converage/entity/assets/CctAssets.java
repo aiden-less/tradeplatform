@@ -8,6 +8,7 @@ import org.apache.ibatis.type.Alias;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 //币币账号资产
 @Data
@@ -29,6 +30,10 @@ public class CctAssets implements Serializable {
     @Column(name = Assets_amount)
     private BigDecimal assetsAmount; //资产数目
 
+    private String coinName;
+    private BigDecimal freeAmount;//可用数目
+    private BigDecimal frozenAmount;//冻结数目
+    private List<CctFinanceLog> financeLogs;//财务记录
 
     //DB Column name
     public static final String Id = "id";

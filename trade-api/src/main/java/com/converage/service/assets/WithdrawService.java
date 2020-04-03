@@ -1,5 +1,6 @@
 package com.converage.service.assets;
 
+import com.converage.entity.assets.CctFinanceLog;
 import com.converage.mapper.user.CctAssetsMapper;
 import com.converage.service.wallet.EthService;
 import com.google.common.collect.ImmutableMap;
@@ -7,7 +8,6 @@ import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
 import com.converage.constance.SettlementConst;
 import com.converage.entity.assets.CctAssets;
-import com.converage.entity.assets.UserAssetsCharge;
 import com.converage.entity.assets.WalletTransferRecord;
 import com.converage.entity.sys.Subscriber;
 import com.converage.entity.market.TradeCoin;
@@ -16,7 +16,6 @@ import com.converage.entity.user.Certification;
 import com.converage.entity.user.User;
 import com.converage.service.common.GlobalConfigService;
 import com.converage.service.user.AssetsTurnoverService;
-import com.converage.service.user.UserAssetsService;
 import com.converage.utils.EncryptUtils;
 import com.converage.utils.EnvironmentUtils;
 import com.converage.utils.MineDateUtils;
@@ -36,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static com.converage.constance.AssetTurnoverConst.COMPANY_ID;
-import static com.converage.constance.AssetTurnoverConst.TURNOVER_TYPE_WITHDRAW;
 import static com.converage.constance.UserConst.USER_CERT_STATUS_PASS;
 
 @Service
@@ -109,25 +106,24 @@ public class WithdrawService extends BaseService {
         List<Certification> certificationPo = selectListByWhereMap(whereMap2, Certification.class);
         ValueCheckUtils.notEmpty(certificationPo, "须通过实名认证后再提现");
 
-        UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
-        userAssetsCharge.setUserId(userId);
+        CctFinanceLog cctFinanceLog = new CctFinanceLog();
+        cctFinanceLog.setUserId(userId);
 
         //扣除手续费
         BigDecimal withdrawRate = tradeCoin.getWithDrawPoundageRate().divide(BigDecimal.valueOf(100));
         BigDecimal poundage = amount.multiply(withdrawRate);
-        userAssetsCharge.setRecordAmount(amount);
-        userAssetsCharge.setPoundageAmount(poundage);
-        userAssetsCharge.setRecordType(SettlementConst.USERASSETS_WITHDRAW);
-        userAssetsCharge.setCoinId("");
+        cctFinanceLog.setRecordAmount(amount);
+        cctFinanceLog.setPoundageAmount(poundage);
+        cctFinanceLog.setRecordType(SettlementConst.USERASSETS_WITHDRAW);
+        cctFinanceLog.setCoinId("");
 
 
         BigDecimal withdrawAuditLimitAmount = tradeCoin.getWithdrawAuditLimitAmount();
 
         String fromAddress = globalConfigService.get(GlobalConfigService.Enum.Withdraw_Output_Address);
-        userAssetsCharge.setFromAddress(fromAddress);
-        userAssetsCharge.setToAddress(toAddress);
-        userAssetsCharge.setIfMergePoundage(false);
-        userAssetsCharge.setRemark("提现金额：" + amount + " 提现地址：" + toAddress + "，手续费：" + poundage);
+        cctFinanceLog.setFromAddress(fromAddress);
+        cctFinanceLog.setToAddress(toAddress);
+        cctFinanceLog.setRemark("提现金额：" + amount + " 提现地址：" + toAddress + "，手续费：" + poundage);
 
         CctAssets sourceCctAssets = selectOneByWhereMap(
                 ImmutableMap.of(CctAssets.User_id + "=", userId, CctAssets.Coin_id + "=", coinId), CctAssets.class
@@ -146,13 +142,13 @@ public class WithdrawService extends BaseService {
 
                 //审核
                 if (amount.compareTo(withdrawAuditLimitAmount) >= 0) {
-                    userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE);
+                    cctFinanceLog.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE);
                 } else {
-                    userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_PASS);
+                    cctFinanceLog.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_PASS);
                 }
 
-                ValueCheckUtils.notZero(insertIfNotNull(userAssetsCharge), "提现失败");
-                String chargeId = userAssetsCharge.getId();
+                ValueCheckUtils.notZero(insertIfNotNull(cctFinanceLog), "提现失败");
+                String chargeId = cctFinanceLog.getId();
                 AssetsTurnoverExtralParam extralParam = new AssetsTurnoverExtralParam();
                 extralParam.setChargeId(chargeId);
                 String turnoverDetail = "提现" + settlementName + "地址：" + toAddress + "，手续费：" + poundage;
@@ -173,8 +169,8 @@ public class WithdrawService extends BaseService {
                     } catch (InterruptedException | ExecutionException | IOException e) {
                         throw new BusinessException("提现失败");
                     }
-                    userAssetsCharge.setTransactionHash(ethSendTransaction.getTransactionHash());
-                    update(userAssetsCharge);
+                    cctFinanceLog.setTransactionHash(ethSendTransaction.getTransactionHash());
+                    update(cctFinanceLog);
                 }
             }
         });
@@ -185,32 +181,32 @@ public class WithdrawService extends BaseService {
     /**
      * 提现审核
      */
-    public void auditWithDraw(UserAssetsCharge userAssetsCharge, Integer auditStatus, Subscriber subscriber) {
-        if (userAssetsCharge.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
+    public void auditWithDraw(CctFinanceLog cctFinanceLog, Integer auditStatus, Subscriber subscriber) {
+        if (cctFinanceLog.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
             throw new BusinessException("该记录已审核");
         }
 
-        BigDecimal withdrawAmount = userAssetsCharge.getRecordAmount();
-        BigDecimal poundageAmount = userAssetsCharge.getPoundageAmount();
+        BigDecimal withdrawAmount = cctFinanceLog.getRecordAmount();
+        BigDecimal poundageAmount = cctFinanceLog.getPoundageAmount();
 
         BigDecimal backAmount = withdrawAmount.add(poundageAmount);
-        String userId = userAssetsCharge.getUserId();
+        String userId = cctFinanceLog.getUserId();
 
-        String toAddress = userAssetsCharge.getToAddress();
+        String toAddress = cctFinanceLog.getToAddress();
 
         String auditStr = RechargeService.getAuditString(auditStatus);
         String remark = String.format("; 管理员: %s 于 %s 审核 %s", subscriber.getUserName(), MineDateUtils.getCurDateFormat(), auditStr);
 
         String errorMsg = "审核失败";
-        String id = userAssetsCharge.getCoinId();
+        String id = cctFinanceLog.getCoinId();
 
         TradeCoin tradeCoin = selectOneById(id, TradeCoin.class);
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                userAssetsCharge.setRemark(userAssetsCharge.getRemark() + remark);
+                cctFinanceLog.setRemark(cctFinanceLog.getRemark() + remark);
                 if (auditStatus == SettlementConst.USERASSETS_RECHARGE_AUDIT_PASS) {
-                    userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_PASS);
+                    cctFinanceLog.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_PASS);
 
 
                     EthSendTransaction ethSendTransaction = null;
@@ -220,12 +216,12 @@ public class WithdrawService extends BaseService {
                     } catch (InterruptedException | ExecutionException | IOException e) {
                         throw new BusinessException("提现失败");
                     }
-                    userAssetsCharge.setTransactionHash(ethSendTransaction.getTransactionHash());
-                    userAssetsCharge.setFromAddress(fromAddress);
-                    update(userAssetsCharge);
+                    cctFinanceLog.setTransactionHash(ethSendTransaction.getTransactionHash());
+                    cctFinanceLog.setFromAddress(fromAddress);
+                    update(cctFinanceLog);
                 } else {
                     ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, backAmount, tradeCoin.getId()), errorMsg);
-                    userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_UNPASS);
+                    cctFinanceLog.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_UNPASS);
 
                 }
 

@@ -1,31 +1,18 @@
 package com.converage.service.wallet;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.converage.architecture.service.BaseService;
-import com.converage.entity.assets.UserAssetsCharge;
+import com.converage.entity.assets.CctFinanceLog;
 import com.converage.entity.chain.MainNetInfo;
 import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.chain.WalletConfig;
-import com.converage.entity.user.AssetsTurnoverExtralParam;
 import com.converage.init.WalletConfigInit;
 import com.converage.mapper.user.CctAssetsMapper;
-import com.converage.service.user.UserAssetsService;
-import com.converage.utils.HttpUtils;
 import com.converage.utils.ValueCheckUtils;
-import com.google.common.collect.Lists;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.TransactionSignature;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet2Params;
-import org.bitcoinj.params.TestNet3Params;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.script.ScriptBuilder;
-import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
@@ -37,8 +24,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 
-import static com.converage.constance.AssetTurnoverConst.COMPANY_ID;
-import static com.converage.constance.AssetTurnoverConst.TURNOVER_TYPE_RECHARGE;
 import static com.converage.constance.SettlementConst.*;
 
 /**
@@ -308,7 +293,7 @@ public class BtcService extends BaseService {
 
     }
 
-    public boolean parseBlock(long index, List<UserAssetsCharge> userAssetsChargeList, Map<String, String> addressMap, Boolean ifAudit) throws Throwable {
+    public boolean parseBlock(long index, List<CctFinanceLog> cctFinanceLogList, Map<String, String> addressMap, Boolean ifAudit) throws Throwable {
         String hash = doRequest(METHOD_GET_BLOCK_HASH, index).toString();
         String block = JSONObject.toJSONString(doRequest(METHOD_GET_BLOCK, hash));
         System.out.println("block：" + block);
@@ -323,7 +308,7 @@ public class BtcService extends BaseService {
             Iterator<Object> iteratorTxs = jsonArrayTx.iterator();
             while (iteratorTxs.hasNext()) {
                 String txid = (String) iteratorTxs.next();
-                parseTx(txid, confirm, userAssetsChargeList, addressMap, ifAudit);
+                parseTx(txid, confirm, cctFinanceLogList, addressMap, ifAudit);
             }
             return true;
         } else {
@@ -331,7 +316,7 @@ public class BtcService extends BaseService {
         }
     }
 
-    public void parseTx(String txid, int coinfirm, List<UserAssetsCharge> userAssetsChargeList, Map<String, String> addressMap, Boolean ifAudit) throws Throwable {
+    public void parseTx(String txid, int coinfirm, List<CctFinanceLog> cctFinanceLogList, Map<String, String> addressMap, Boolean ifAudit) throws Throwable {
         String txStr = "";
         try {
             txStr = JSONObject.toJSONString(doRequest(METHOD_GET_TRANSACTION, txid));
@@ -357,22 +342,21 @@ public class BtcService extends BaseService {
                 if (StringUtils.isNotEmpty(userId)) {
                     //添加充值记录
                     log.info("用户充值");
-                    UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
-                    userAssetsCharge.setTransactionHash(txId);
-                    userAssetsCharge.setUserId(userId);
-                    userAssetsCharge.setRecordType(USERASSETS_RECHARGE);
-                    userAssetsCharge.setCoinId(""); //TODO coin id
-                    userAssetsCharge.setStatus(judgeRechargeStatus(ifAudit));
-                    userAssetsCharge.setRecordAmount(amount);
+                    CctFinanceLog cctFinanceLog = new CctFinanceLog();
+                    cctFinanceLog.setTransactionHash(txId);
+                    cctFinanceLog.setUserId(userId);
+                    cctFinanceLog.setRecordType(USERASSETS_RECHARGE);
+                    cctFinanceLog.setCoinId(""); //TODO coin id
+                    cctFinanceLog.setStatus(judgeRechargeStatus(ifAudit));
+                    cctFinanceLog.setRecordAmount(amount);
                     String detailStr = "转出地址：" + "" + "，转入地址：" + address;
-                    userAssetsCharge.setRemark(detailStr);
-                    userAssetsCharge.setFromAddress("");
-                    userAssetsCharge.setToAddress(address);
-                    userAssetsCharge.setIfDistributeScan(false);
-                    userAssetsCharge.setIfMergeAssets(false);
-//                        userAssetsCharge.setIfConfirm(confirmFlg);
+                    cctFinanceLog.setRemark(detailStr);
+                    cctFinanceLog.setFromAddress("");
+                    cctFinanceLog.setToAddress(address);
+                    cctFinanceLog.setIfMergeAssets(false);
+//                        cctFinanceLog.setIfConfirm(confirmFlg);
 
-                    userAssetsChargeList.add(userAssetsCharge);
+                    cctFinanceLogList.add(cctFinanceLog);
                 }
             }
         }
@@ -402,7 +386,7 @@ public class BtcService extends BaseService {
             return;
         }
 
-        List<UserAssetsCharge> userAssetsChargeList = new ArrayList<>();
+        List<CctFinanceLog> cctFinanceLogList = new ArrayList<>();
 
         BigInteger maxSyncBlockNum = new BigInteger("10");
         if (freshBlockNumber.subtract(currencyBlockNumber).compareTo(maxSyncBlockNum) > 0) {
@@ -412,7 +396,7 @@ public class BtcService extends BaseService {
         Long confirmBlock = freshBlockNumber.longValue() - 3;
         System.out.println("currencyBlockNumber：" + currencyBlockNumber.longValue() + 1 + "，confirmBlock：" + confirmBlock);
         for (long i = currencyBlockNumber.longValue() + 1; i <= confirmBlock; i++) {
-            parseBlock(i, userAssetsChargeList, addressMap, mainNetInfo.getIfAudit());
+            parseBlock(i, cctFinanceLogList, addressMap, mainNetInfo.getIfAudit());
         }
 
 
@@ -420,8 +404,8 @@ public class BtcService extends BaseService {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
                 String errorMsg = "区块同步失败";
-                if (userAssetsChargeList.size() > 0) {
-                    for (UserAssetsCharge uac : userAssetsChargeList) {
+                if (cctFinanceLogList.size() > 0) {
+                    for (CctFinanceLog uac : cctFinanceLogList) {
                         String userId = uac.getUserId();
                         BigDecimal amount = uac.getRecordAmount();
                         String coinId = uac.getCoinId();

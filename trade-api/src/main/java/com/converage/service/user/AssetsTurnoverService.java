@@ -8,6 +8,7 @@ import com.converage.constance.SettlementConst;
 import com.converage.entity.user.AssetsTurnover;
 import com.converage.entity.user.AssetsTurnoverExtralParam;
 import com.converage.mapper.user.AssetsTurnoverMapper;
+import com.converage.service.assets.UserAssetsService;
 import com.converage.utils.BigDecimalUtils;
 import com.converage.utils.ValueCheckUtils;
 import org.apache.commons.lang3.StringUtils;

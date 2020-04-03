@@ -30,6 +30,7 @@ public class AppCctController {
     private RSAService rsaService;
 
 
+
     //币币交易主页
     @RequestMapping("home")
     public Result<?> home() {
@@ -79,5 +80,7 @@ public class AppCctController {
         String userId = JwtUtils.getUserByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME)).getId();
         return ResultUtils.success();
     }
+
+
 
 }

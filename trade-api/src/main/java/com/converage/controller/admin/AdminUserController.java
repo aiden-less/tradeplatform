@@ -7,27 +7,23 @@ import com.converage.architecture.utils.JwtUtils;
 import com.converage.architecture.utils.ResultUtils;
 import com.converage.constance.CommonConst;
 import com.converage.constance.SettlementConst;
-import com.converage.constance.UserConst;
 import com.converage.entity.assets.CctAssets;
-import com.converage.entity.assets.UserAssetsCharge;
+import com.converage.entity.assets.CctFinanceLog;
 import com.converage.entity.sys.Subscriber;
 import com.converage.entity.user.*;
 import com.converage.service.assets.RechargeService;
+import com.converage.service.assets.UserAssetsService;
 import com.converage.service.assets.WithdrawService;
 import com.converage.service.user.*;
-import com.converage.utils.ExportUtils;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -149,7 +145,7 @@ public class AdminUserController {
 //     * 充提转列表
 //     */
 //    @PostMapping("recharge/list")
-//    public Result<?> listRecharge(@RequestBody Pagination<UserAssetsCharge> pagination) {
+//    public Result<?> listRecharge(@RequestBody Pagination<CctFinanceLog> pagination) {
 //        return ResultUtils.success(rechargeService.listRecharge(pagination), pagination.getTotalRecordNumber());
 //    }
 
@@ -158,12 +154,12 @@ public class AdminUserController {
      */
     @PostMapping("recharge/audit")
     public Result<?> auditRecharge(String id, Integer status, BigDecimal amount, HttpServletRequest request) throws IOException {
-        UserAssetsCharge userAssetsCharge = baseService.selectOneById(id, UserAssetsCharge.class);
+        CctFinanceLog cctFinanceLog = baseService.selectOneById(id, CctFinanceLog.class);
         Subscriber subscriber = JwtUtils.getAdminByToken(request.getHeader(JwtUtils.ACCESS_TOKEN_NAME));
-        if (userAssetsCharge.getRecordType() == SettlementConst.USERASSETS_RECHARGE) {
+        if (cctFinanceLog.getRecordType() == SettlementConst.USERASSETS_RECHARGE) {
             rechargeService.auditRecharge(id, status, subscriber);
-        } else if (userAssetsCharge.getRecordType() == SettlementConst.USERASSETS_WITHDRAW) {
-            withdrawService.auditWithDraw(userAssetsCharge, status, subscriber);
+        } else if (cctFinanceLog.getRecordType() == SettlementConst.USERASSETS_WITHDRAW) {
+            withdrawService.auditWithDraw(cctFinanceLog, status, subscriber);
         }
         return ResultUtils.success("操作成功");
     }
@@ -223,12 +219,12 @@ public class AdminUserController {
 //     * 导出 充提转
 //     */
 //    @PostMapping("export/recharge")
-//    public void exportRecharge(@RequestBody Pagination<UserAssetsCharge> pagination, HttpServletResponse response) {
+//    public void exportRecharge(@RequestBody Pagination<CctFinanceLog> pagination, HttpServletResponse response) {
 //        pagination.setPageSize(ExportUtils.SHEET_MAX_MEMORY_ROW_SIZE);
-//        ExportUtils.ExportDataSource<UserAssetsCharge> dataSource = new ExportUtils.ExportDataSource<UserAssetsCharge>() {
-//            List<UserAssetsCharge> result = null;
+//        ExportUtils.ExportDataSource<CctFinanceLog> dataSource = new ExportUtils.ExportDataSource<CctFinanceLog>() {
+//            List<CctFinanceLog> result = null;
 //
-//            public List<UserAssetsCharge> load(int pageNo, int pageSize) {
+//            public List<CctFinanceLog> load(int pageNo, int pageSize) {
 //                return rechargeService.listRecharge(pagination).getList();
 //            }
 //
@@ -240,7 +236,7 @@ public class AdminUserController {
 //                return result.size();
 //            }
 //
-//            public Object[] convert(UserAssetsCharge userAssetsCharge) {
+//            public Object[] convert(CctFinanceLog userAssetsCharge) {
 //                return new Object[]{userAssetsCharge.getUserAccount(), userAssetsService.getSettlementNameById(userAssetsCharge.getSettlementId()),
 //                        RechargeService.getTurnoverType(userAssetsCharge.getRecordType()), userAssetsCharge.getRecordAmount(),
 //                        RechargeService.getAuditByStatus(userAssetsCharge.getStatus()), userAssetsCharge.getRecordPic(),

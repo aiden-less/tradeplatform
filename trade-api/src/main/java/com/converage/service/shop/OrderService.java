@@ -18,7 +18,7 @@ import com.converage.controller.app.req.ShopOrderSkuReq;
 import com.converage.entity.shop.*;
 import com.converage.mapper.shop.OrderMapper;
 import com.converage.service.user.AssetsTurnoverService;
-import com.converage.service.user.UserAssetsService;
+import com.converage.service.assets.UserAssetsService;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -269,7 +269,6 @@ public class OrderService extends BaseService {
         BigDecimal orderCnyPrice = BigDecimal.ZERO;
 
         String userId = user.getId();
-        String userName = user.getUserName();
 
         String orderErrorMsg = "创建订单失败";
         String stockErrorMsg = "商品库存不足";
@@ -286,7 +285,7 @@ public class OrderService extends BaseService {
 
         OrderInfo orderInfo = new OrderInfo();
         orderInfo.buildOrderInfo(
-                settlementId, userId, shopId, userName, orderCurrencyPrice, orderIntegralPrice, orderCnyPrice,
+                settlementId, userId, shopId, "", orderCurrencyPrice, orderIntegralPrice, orderCnyPrice,
                 orderType, ORDER_STATUS_NOT_PAY, shoppingAddress
         );
 

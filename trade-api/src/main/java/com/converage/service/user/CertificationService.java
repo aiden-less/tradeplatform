@@ -1,5 +1,6 @@
 package com.converage.service.user;
 
+import com.converage.service.assets.UserAssetsService;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.dto.Pagination;
 import com.converage.architecture.exception.BusinessException;

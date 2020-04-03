@@ -27,7 +27,7 @@ import static com.converage.constance.RedisKeyEnum.CctRafRate;
 /**
  * Created by 旺旺 on 2020/3/24.
  */
-@RequestMapping(value = "/app/home")
+@RequestMapping(value = "app")
 @RestController
 public class AppHomeController {
 
@@ -45,6 +45,7 @@ public class AppHomeController {
      *
      * @return
      */
+    @RequestMapping("home")
     public Result<?> appHome() {
         Pagination pagination = new Pagination();
         //APP首页公告
@@ -75,7 +76,8 @@ public class AppHomeController {
      *
      * @return
      */
-    public Result<?> webHome() {
+    @RequestMapping("web")
+    public Result<?> web() {
 
         return ResultUtils.success();
     }

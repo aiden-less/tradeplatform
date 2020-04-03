@@ -2,12 +2,10 @@ package com.converage.service.assets;
 
 import com.converage.mapper.user.CctAssetsMapper;
 import com.google.common.collect.ImmutableMap;
-import com.converage.architecture.dto.Pagination;
-import com.converage.architecture.dto.TotalResult;
 import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
 import com.converage.constance.SettlementConst;
-import com.converage.entity.assets.UserAssetsCharge;
+import com.converage.entity.assets.CctFinanceLog;
 import com.converage.entity.sys.Subscriber;
 import com.converage.entity.market.TradeCoin;
 import com.converage.entity.user.AssetsTurnover;
@@ -16,7 +14,6 @@ import com.converage.entity.user.User;
 import com.converage.service.common.AliOSSBusiness;
 import com.converage.service.common.GlobalConfigService;
 import com.converage.service.user.AssetsTurnoverService;
-import com.converage.service.user.UserAssetsService;
 import com.converage.service.user.UserService;
 import com.converage.utils.MineDateUtils;
 import com.converage.utils.ValueCheckUtils;
@@ -100,24 +97,24 @@ public class RechargeService extends BaseService {
             throw new BusinessException("充值类型异常");
         }
 
-        UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
-        userAssetsCharge.setRecordPic(aliOSSBusiness.uploadCommonPic(rechargeFile));
-        userAssetsCharge.setUserId(userId);
-        userAssetsCharge.setRecordType(SettlementConst.USERASSETS_RECHARGE);
-        userAssetsCharge.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE);
-        userAssetsCharge.setRecordAmount(rechargeAmount);
+        CctFinanceLog cctFinanceLog = new CctFinanceLog();
+//        cctFinanceLog.setRecordPic(aliOSSBusiness.uploadCommonPic(rechargeFile));
+        cctFinanceLog.setUserId(userId);
+        cctFinanceLog.setRecordType(SettlementConst.USERASSETS_RECHARGE);
+        cctFinanceLog.setStatus(SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE);
+        cctFinanceLog.setRecordAmount(rechargeAmount);
         String detailStr = "转出地址：" + fromAddress + "，转入地址：" + sendWalletAddress;
-        userAssetsCharge.setRemark(detailStr);
-        userAssetsCharge.setFromAddress(fromAddress);
-        userAssetsCharge.setToAddress(sendWalletAddress);
+        cctFinanceLog.setRemark(detailStr);
+        cctFinanceLog.setFromAddress(fromAddress);
+        cctFinanceLog.setToAddress(sendWalletAddress);
 
 
         String errorMsg = "充值失败";
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                ValueCheckUtils.notZero(insertIfNotNull(userAssetsCharge), errorMsg);
-                String chargeId = userAssetsCharge.getId();
+                ValueCheckUtils.notZero(insertIfNotNull(cctFinanceLog), errorMsg);
+                String chargeId = cctFinanceLog.getId();
                 AssetsTurnoverExtralParam extralParam = new AssetsTurnoverExtralParam();
                 extralParam.setChargeId(chargeId);
                 assetsTurnoverService.createAssetsTurnover(
@@ -130,23 +127,23 @@ public class RechargeService extends BaseService {
     }
 
 
-    public void auditRecharge(UserAssetsCharge userAssetsCharge, Integer auditStatus) throws IOException {
-        if (userAssetsCharge.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
+    public void auditRecharge(CctFinanceLog cctFinanceLog, Integer auditStatus) throws IOException {
+        if (cctFinanceLog.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
             throw new BusinessException("该记录已审核");
         }
 
-        String chargeId = userAssetsCharge.getId();
-        String userId = userAssetsCharge.getUserId();
-        String coinId = userAssetsCharge.getCoinId();
+        String chargeId = cctFinanceLog.getId();
+        String userId = cctFinanceLog.getUserId();
+        String coinId = cctFinanceLog.getCoinId();
 
         Map<String, Object> whereMap = ImmutableMap.of(
-                UserAssetsCharge.User_id + "=", userAssetsCharge.getUserId(),
-                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
+                CctFinanceLog.User_id + "=", cctFinanceLog.getUserId(),
+                CctFinanceLog.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
         );
-        List<String> fieldList = Arrays.asList(UserAssetsCharge.Id);
-        List<UserAssetsCharge> userAssetsCharges = selectiveListByWhereMap(fieldList, whereMap, UserAssetsCharge.class);
+        List<String> fieldList = Arrays.asList(CctFinanceLog.Id);
+        List<CctFinanceLog> cctFinanceLogs = selectiveListByWhereMap(fieldList, whereMap, CctFinanceLog.class);
         Boolean finishMission = false;
-        if (userAssetsCharges.size() == 0) {
+        if (cctFinanceLogs.size() == 0) {
             finishMission = true;
         }
 
@@ -156,18 +153,18 @@ public class RechargeService extends BaseService {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
 
-                BigDecimal amount = userAssetsCharge.getRecordAmount();
+                BigDecimal amount = cctFinanceLog.getRecordAmount();
                 if (auditStatus == USERASSETS_RECHARGE_AUDIT_PASS) {
-                    userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
-                    userAssetsCharge.setRecordAmount(amount);
+                    cctFinanceLog.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
+                    cctFinanceLog.setRecordAmount(amount);
 
                     ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, amount, coinId), errorMsg);
                 } else {
-                    userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
+                    cctFinanceLog.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
                 }
 
 
-                ValueCheckUtils.notZero(update(userAssetsCharge), errorMsg);
+                ValueCheckUtils.notZero(update(cctFinanceLog), errorMsg);
 
             }
         });
@@ -180,20 +177,20 @@ public class RechargeService extends BaseService {
      * @param auditStatus
      */
     public void auditRecharge(String recordId, Integer auditStatus, Subscriber subscriber) throws IOException {
-        UserAssetsCharge userAssetsCharge = selectOneById(recordId, UserAssetsCharge.class);
-        ValueCheckUtils.notEmpty(userAssetsCharge, "未找到充值记录");
+        CctFinanceLog cctFinanceLog = selectOneById(recordId, CctFinanceLog.class);
+        ValueCheckUtils.notEmpty(cctFinanceLog, "未找到充值记录");
 
-        BigDecimal recordAmount = userAssetsCharge.getRecordAmount();
-        if (userAssetsCharge.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
+        BigDecimal recordAmount = cctFinanceLog.getRecordAmount();
+        if (cctFinanceLog.getStatus() != SettlementConst.USERASSETS_RECHARGE_AUDIT_NONE) {
             throw new BusinessException("该记录已审核");
         }
 
-        if (!userAssetsCharge.getIfConfirm()) {
+        if (!cctFinanceLog.getIfConfirm()) {
             throw new BusinessException("该记录未确认，请等待交易确认后再审核");
         }
 
 
-        String userId = userAssetsCharge.getUserId();
+        String userId = cctFinanceLog.getUserId();
 
 
         String auditStr = getAuditString(auditStatus);
@@ -202,8 +199,8 @@ public class RechargeService extends BaseService {
             remark = String.format("; 管理员: %s 于 %s 审核 %s", subscriber.getUserName(), MineDateUtils.getCurDateFormat(), auditStr);
         }
 
-        String coinId = userAssetsCharge.getCoinId();
-        userAssetsCharge.setRemark(userAssetsCharge.getRemark() + remark);
+        String coinId = cctFinanceLog.getCoinId();
+        cctFinanceLog.setRemark(cctFinanceLog.getRemark() + remark);
 
         String errorMsg = "审核失败";
 
@@ -215,21 +212,21 @@ public class RechargeService extends BaseService {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
 
-                userAssetsCharge.setRemark(userAssetsCharge.getRemark() + finalRemark);
+                cctFinanceLog.setRemark(cctFinanceLog.getRemark() + finalRemark);
                 if (auditStatus == USERASSETS_RECHARGE_AUDIT_PASS) {
-                    userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
-                    userAssetsCharge.setRecordAmount(recordAmount);
+                    cctFinanceLog.setStatus(USERASSETS_RECHARGE_AUDIT_PASS);
+                    cctFinanceLog.setRecordAmount(recordAmount);
 
                     assetsTurnover.setTurnoverAmount(recordAmount);
 
                     ValueCheckUtils.notZero(updateIfNotNull(assetsTurnover), errorMsg);
                     ValueCheckUtils.notZero(cctAssetsMapper.increase(userId, recordAmount, coinId), errorMsg);
                 } else {
-                    userAssetsCharge.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
+                    cctFinanceLog.setStatus(USERASSETS_RECHARGE_AUDIT_UNPASS);
                 }
 
 
-                ValueCheckUtils.notZero(update(userAssetsCharge), errorMsg);
+                ValueCheckUtils.notZero(update(cctFinanceLog), errorMsg);
 
 
             }
@@ -255,7 +252,7 @@ public class RechargeService extends BaseService {
 //            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
 //                ValueCheckUtils.notZero(userAssetsService.increaseUserAssets(userId, rechargeAmount, rechargeSettlementId), "充值失败");
 //
-//                UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
+//                CctFinanceLog userAssetsCharge = new CctFinanceLog();
 //                userAssetsCharge.setUserId(userId);
 //                userAssetsCharge.setRecordType(SettlementConst.USERASSETS_RECHARGE);
 //                userAssetsCharge.setRecordAmount(rechargeAmount);

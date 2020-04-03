@@ -17,5 +17,5 @@ public interface CctFrozenAssetsMapper {
 
     Integer decrease(@Param("userId") String userId, @Param("amount") BigDecimal amount, @Param("coinId") String coinId);
 
-    List<CctFrozenAssets> listRefund(@Param("status") int status, @Param("limit") int limit);
+    List<CctFrozenAssets> listRefund(@Param("status") int status);
 }

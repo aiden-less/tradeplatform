@@ -3,18 +3,65 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.converage.mapper.user.LctAssetsMapper">
 
+    <resultMap id="lctAssetsMap" type="com.converage.entity.assets.LctAssets">
+        <id property="id" column="id"/>
+        <result property="coinId" column="coin_id"/>
+        <result property="coinName" column="coin_name"/>
+        <result property="userId" column="user_id"/>
+        <result property="freeAmount" column="free_amount"/>
+        <result property="frozenAmount" column="frozen_amount"/>
+    </resultMap>
+
+    <resultMap id="lctFinanceMap" type="com.converage.entity.assets.LctFinanceLog">
+        <id property="id" column="id"/>
+        <result property="recordType" column="record_type"/>
+        <result property="recordAmount" column="record_amount"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
     <update id="increase">
         UPDATE lct_assets SET
-        assets_amount = assets_amount + #{amount}
+        free_amount = free_amount + #{amount}
         WHERE user_id = #{userId} AND coin_id = #{coinId}
     </update>
 
     <update id="decrease">
         UPDATE lct_assets SET
-        assets_amount = assets_amount - #{amount}
+        free_amount = free_amount - #{amount}
         WHERE user_id = #{userId}
-        AND assets_amount - #{amount}>=0
+        AND free_amount - #{amount}>=0
         AND coin_id = #{coinId}
     </update>
+
+
+    <select id="listUserAssets" resultMap="lctAssetsMap">
+        SELECT
+          a.id,a.user_id,a.coin_id,a.free_amount,b.coin_name
+        FROM lct_assets a LEFT JOIN trade_coin b ON a.coin_id = b.id
+        where a.user_id = #{userId}
+    </select>
+
+    <select id="getUserAssets" parameterType="com.converage.dto.AssetsFinanceQuery" resultMap="lctAssetsMap">
+        SELECT
+          a.id,a.user_id,a.coin_id,a.assets_amount as free_amount,
+          (SELECT SUM(c.assets_amount) FROM cct_frozen_assets c WHERE c.if_refund = FALSE) as
+          b.coin_name
+        FROM cct_assets a LEFT JOIN trade_coin b ON a.coin_id = b.id
+        WHERE a.user_id = #{userId} AND a.coin_id = #{coinId}
+    </select>
+
+    <select id="listFinanceLog" resultMap="lctAssetsMap">
+        SELECT id,record_type,record_amount,status,create_time,remark FROM cct_finance_log
+        WHERE user_id = #{userId} AND coin_id = #{coindId}
+        <if test="type != 0">
+            AND type = #{type}
+        </if>
+        <if test="type != 0">
+            AND type = #{type}
+        </if>
+        LIMIT #{index},20
+    </select>
 
 </mapper>

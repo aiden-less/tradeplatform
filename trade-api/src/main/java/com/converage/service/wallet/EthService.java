@@ -1,23 +1,19 @@
 package com.converage.service.wallet;
 
+import com.converage.entity.assets.CctFinanceLog;
 import com.converage.entity.chain.WalletConfig;
 import com.converage.entity.wallet.WalletAccount;
-import com.converage.init.WalletConfigInit;
 import com.converage.mapper.user.CctAssetsMapper;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.dto.TasteFilePathConfig;
 import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
-import com.converage.constance.WalletConst;
-import com.converage.entity.assets.UserAssetsCharge;
 import com.converage.entity.assets.WalletTransferRecord;
 import com.converage.entity.chain.MainNetInfo;
 import com.converage.entity.chain.MainNetUserAddr;
 import com.converage.entity.market.TradeCoin;
-import com.converage.entity.user.AssetsTurnoverExtralParam;
 import com.converage.service.common.GlobalConfigService;
 import com.converage.service.user.AssetsTurnoverService;
-import com.converage.service.user.UserAssetsService;
 import com.converage.utils.BigDecimalUtils;
 import com.converage.utils.EnvironmentUtils;
 import com.converage.utils.ValueCheckUtils;
@@ -59,8 +55,6 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static com.converage.constance.AssetTurnoverConst.COMPANY_ID;
-import static com.converage.constance.AssetTurnoverConst.TURNOVER_TYPE_RECHARGE;
 import static com.converage.constance.SettlementConst.*;
 
 @Service
@@ -208,7 +202,7 @@ public class EthService extends BaseService {
             addressMap.put(mud.getMainNetAddr().toLowerCase(), mud.getUserId());
         }
 
-        List<UserAssetsCharge> userAssetsChargeList = new ArrayList<>();
+        List<CctFinanceLog> cctFinanceLogList = new ArrayList<>();
 
 //        BigInteger maxSyncBlockNum = new BigInteger("20");
 //        if (freshBlockNumber.subtract(currencyBlockNumber).compareTo(maxSyncBlockNum) > 0) {
@@ -314,22 +308,21 @@ public class EthService extends BaseService {
 //                    continue;
 //                }
 
-                UserAssetsCharge userAssetsCharge = new UserAssetsCharge();
-                userAssetsCharge.setTransactionHash(transactionHash);
-                userAssetsCharge.setUserId(userId);
-                userAssetsCharge.setRecordType(USERASSETS_RECHARGE);
-                userAssetsCharge.setCoinId(coinId);
-                userAssetsCharge.setStatus(judgeRechargeStatus(transactionFlag, filterSW.getIfRecharge()));
-                userAssetsCharge.setRecordAmount(transferAmount);
+                CctFinanceLog cctFinanceLog = new CctFinanceLog();
+                cctFinanceLog.setTransactionHash(transactionHash);
+                cctFinanceLog.setUserId(userId);
+                cctFinanceLog.setRecordType(USERASSETS_RECHARGE);
+                cctFinanceLog.setCoinId(coinId);
+                cctFinanceLog.setStatus(judgeRechargeStatus(transactionFlag, filterSW.getIfRecharge()));
+                cctFinanceLog.setRecordAmount(transferAmount);
                 String detailStr = "转出地址：" + fromAddress + "，转入地址：" + toAddress;
-                userAssetsCharge.setRemark(detailStr);
-                userAssetsCharge.setFromAddress(fromAddress);
-                userAssetsCharge.setToAddress(toAddress);
-                userAssetsCharge.setIfDistributeScan(false);
-                userAssetsCharge.setIfMergeAssets(false);
-                userAssetsCharge.setIfConfirm(confirmFlg);
+                cctFinanceLog.setRemark(detailStr);
+                cctFinanceLog.setFromAddress(fromAddress);
+                cctFinanceLog.setToAddress(toAddress);
+                cctFinanceLog.setIfMergeAssets(false);
+                cctFinanceLog.setIfConfirm(confirmFlg);
 
-                userAssetsChargeList.add(userAssetsCharge);
+                cctFinanceLogList.add(cctFinanceLog);
             }
         }
 
@@ -337,8 +330,8 @@ public class EthService extends BaseService {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
                 String errorMsg = "区块同步失败";
-                if (userAssetsChargeList.size() > 0) {
-                    for (UserAssetsCharge uac : userAssetsChargeList) {
+                if (cctFinanceLogList.size() > 0) {
+                    for (CctFinanceLog uac : cctFinanceLogList) {
                         String userId = uac.getUserId();
                         BigDecimal amount = uac.getRecordAmount();
                         String coinId = uac.getCoinId();
@@ -398,12 +391,11 @@ public class EthService extends BaseService {
         BigDecimal decimal = new BigDecimal(globalConfigService.get(GlobalConfigService.Enum.Distribute_Transfer_Free_Amount));
 
         Map<String, Object> whereMap = ImmutableMap.of(
-                UserAssetsCharge.If_distribute_scan + "=", Boolean.FALSE,
-                UserAssetsCharge.Record_type + "=", USERASSETS_RECHARGE,
-                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
+                CctFinanceLog.Record_type + "=", USERASSETS_RECHARGE,
+                CctFinanceLog.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
         );
-        List<UserAssetsCharge> userAssetsChargeList = selectListByWhereMap(whereMap, UserAssetsCharge.class);
-        for (UserAssetsCharge uac : userAssetsChargeList) {
+        List<CctFinanceLog> cctFinanceLogList = selectListByWhereMap(whereMap, CctFinanceLog.class);
+        for (CctFinanceLog uac : cctFinanceLogList) {
             String id = uac.getId();
             String toAddress = uac.getToAddress();
             try {
@@ -428,15 +420,15 @@ public class EthService extends BaseService {
         String errorMsg = "归集充值资产失败";
         String mergeRechargeAddr = globalConfigService.get(GlobalConfigService.Enum.Merge_Transfer_Free_Address);
         Map<String, Object> whereMap = ImmutableMap.of(
-                UserAssetsCharge.If_merge_assets + "=", Boolean.FALSE,
-                UserAssetsCharge.Record_type + "=", USERASSETS_RECHARGE,
-                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
+                CctFinanceLog.If_merge_assets + "=", Boolean.FALSE,
+                CctFinanceLog.Record_type + "=", USERASSETS_RECHARGE,
+                CctFinanceLog.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
         );
 
         List<TradeCoin> tradeCoins = selectListByWhereString(TradeCoin.If_recharge + "=", Boolean.TRUE, TradeCoin.class);
-        List<UserAssetsCharge> userAssetsChargeList = selectListByWhereMap(whereMap, UserAssetsCharge.class);
+        List<CctFinanceLog> cctFinanceLogList = selectListByWhereMap(whereMap, CctFinanceLog.class);
 
-        for (UserAssetsCharge uac : userAssetsChargeList) {
+        for (CctFinanceLog uac : cctFinanceLogList) {
             String userId = uac.getUserId();
             String id = uac.getId();
             String fromAddress = uac.getToAddress();
@@ -493,16 +485,16 @@ public class EthService extends BaseService {
 //        String errorMsg = "归集提现手续费失败";
 //        String Merge_Transfer_Free_Address = globalConfigService.get(GlobalConfigService.Enum.Merge_Transfer_Free_Address);
 //        Map<String, Object> whereMap = ImmutableMap.of(
-//                UserAssetsCharge.If_merge_poundage + "=", Boolean.FALSE,
-//                UserAssetsCharge.Record_type + "=", USERASSETS_WITHDRAW,
-//                UserAssetsCharge.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
+//                CctFinanceLog.If_merge_poundage + "=", Boolean.FALSE,
+//                CctFinanceLog.Record_type + "=", USERASSETS_WITHDRAW,
+//                CctFinanceLog.Status + "=", USERASSETS_RECHARGE_AUDIT_PASS
 //        );
 //
 //        List<TradeCoin> tradeCoins = selectListByWhereString(TradeCoin.If_recharge + "=", Boolean.TRUE, TradeCoin.class);
-//        List<UserAssetsCharge> userAssetsChargeList = selectListByWhereMap(whereMap, UserAssetsCharge.class);
+//        List<CctFinanceLog> userAssetsChargeList = selectListByWhereMap(whereMap, CctFinanceLog.class);
 //
 //
-//        for (UserAssetsCharge uac : userAssetsChargeList) {
+//        for (CctFinanceLog uac : userAssetsChargeList) {
 //            String userId = uac.getUserId();
 //            String id = uac.getId();
 //            String fromAddress = uac.getFromAddress();

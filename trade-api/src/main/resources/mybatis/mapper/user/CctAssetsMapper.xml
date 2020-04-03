@@ -3,147 +3,83 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.converage.mapper.user.CctAssetsMapper">
 
+    <resultMap id="cctAssetsMap" type="com.converage.entity.assets.CctAssets">
+        <id property="id" column="id"/>
+        <result property="coinId" column="coin_id"/>
+        <result property="coinName" column="coin_name"/>
+        <result property="userId" column="user_id"/>
+        <result property="freeAmount" column="free_amount"/>
+        <result property="frozenAmount" column="frozen_amount"/>
+    </resultMap>
+
+    <resultMap id="cctFinanceMap" type="com.converage.entity.assets.CctFinanceLog">
+        <id property="id" column="id"/>
+        <result property="recordType" column="record_type"/>
+        <result property="recordAmount" column="record_amount"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
     <update id="increaseUserAssets">
         UPDATE cct_assets SET
-            assets_amount = assets_amount + #{amount}
+            free_amount = free_amount + #{amount}
         WHERE user_id = #{userId} AND coin_id = #{settlementId}
     </update>
 
     <update id="decreaseUserAssets">
         UPDATE cct_assets SET
-            assets_amount = assets_amount - #{amount}
+            free_amount = free_amount - #{amount}
         WHERE user_id = #{userId}
-          AND assets_amount - #{amount}>=0
+          AND free_amount - #{amount}>=0
           AND settlement_id = #{settlementId}
     </update>
 
     <update id="increase">
         UPDATE cct_assets SET
-        assets_amount = assets_amount + #{amount}
+        free_amount = free_amount + #{amount}
         WHERE user_id = #{userId} AND coin_id = #{coinId}
     </update>
 
     <update id="decrease">
         UPDATE cct_assets SET
-        assets_amount = assets_amount - #{amount}
+        free_amount = free_amount - #{amount}
         WHERE user_id = #{userId}
-        AND assets_amount - #{amount}>=0
+        AND free_amount - #{amount}>=0
         AND coin_id = #{coinId}
     </update>
 
 
-    <update id="finishTransaction">
-        UPDATE assets_transaction_order
-        <trim prefix="set" suffixOverrides=",">
-            <if test="status != null ">
-                status = #{status},
-            </if>
-            <if test="finishTime != null ">
-                finish_time = #{finishTime},
-            </if>
-        </trim>
-        WHERE id = #{id} AND status = 0 ;
-    </update>
+    <select id="listUserAssets" resultMap="cctAssetsMap">
+        SELECT
+          a.id,a.user_id,a.coin_id,a.assets_amount as free_amount,
+          (SELECT SUM(c.assets_amount) FROM cct_frozen_assets c WHERE c.if_refund = FALSE) as
+          b.coin_name
+        FROM cct_assets a LEFT JOIN trade_coin b ON a.coin_id = b.id
+        where a.user_id = #{userId}
+    </select>
 
-    <update id="decreaseTransactionOrderNumber">
-      UPDATE assets_transaction_order SET
-        transaction_surplus_number = transaction_surplus_number - #{buyTransactionNumber}
-        WHERE id = #{recordId}
-        AND transaction_surplus_number - #{buyTransactionNumber} >=0
-    </update>
-
-    <update id="updateTransactionOrderNumber">
-        UPDATE assets_transaction_order SET transaction_number = #{assetsNumber} WHERE id IN
-        <foreach collection="ids" open="(" separator="," close=")" item="id">
-            #{id}
-        </foreach>
-    </update>
+    <select id="getUserAssets" parameterType="com.converage.dto.AssetsFinanceQuery" resultMap="cctAssetsMap">
+        SELECT
+          a.id,a.user_id,a.coin_id,a.assets_amount as free_amount,
+          (SELECT SUM(c.assets_amount) FROM cct_frozen_assets c WHERE c.if_refund = FALSE) as
+          b.coin_name
+        FROM cct_assets a LEFT JOIN trade_coin b ON a.coin_id = b.id
+        WHERE a.user_id = #{userId} AND a.coin_id = #{coinId}
+    </select>
 
 
-    <select id="countUser" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM user_info WHERE 1=1
-        <if test="status!=null">
-            AND status = #{status}
+    <select id="listFinanceLog" resultMap="cctFinanceMap">
+        SELECT id,record_type,record_amount,status,create_time,remark FROM cct_finance_log
+        WHERE user_id = #{userId} AND coin_id = #{coindId}
+        <if test="type != 0">
+            AND type = #{type}
         </if>
-    </select>
-
-    <select id="countTodayRegisterUser" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM user_info WHERE DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-    </select>
-
-    <select id="countRWTurnover" resultType="java.math.BigDecimal">
-        SELECT sum(record_amount) FROM cct_assets_charge WHERE
-        record_type = #{recordType} AND settlement_id = #{settlementId} AND status = 1
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
+        <if test="type != 0">
+            AND type = #{type}
         </if>
+        LIMIT #{index},20
     </select>
 
-    <select id="countPCAssets" resultType="java.math.BigDecimal">
-        SELECT SUM(turnover_amount) FROM assets_turnover WHERE settlement_id = #{settlementId} AND turnover_type NOT IN
-        (1,2,3,11)
-        <choose>
-            <when test="inOutType ==0">
-                AND source_id = '1'
-            </when>
-            <otherwise>
-                AND target_id = '1'
-            </otherwise>
-        </choose>
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
 
-    <select id="countBuyMiningMachine" resultType="java.lang.Integer">
-      SELECT COUNT(*) FROM user_mining_machine
-    </select>
-
-    <select id="countTodayBuyMiningMachine" resultType="java.lang.Integer">
-      SELECT COUNT(*) FROM user_mining_machine WHERE  DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-    </select>
-
-    <select id="countAssetsTransactionAmount" resultType="java.math.BigDecimal">
-        SELECT IFNULL(SUM(transaction_amount),0) FROM assets_transaction_user_order
-        WHERE trade_settlement_id = #{settlementId}
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
-
-    <select id="countAssetsTransactionNumber" resultType="java.math.BigDecimal">
-        SELECT IFNULL(SUM(transaction_number),0) FROM assets_transaction_user_order
-        WHERE trade_settlement_id = #{settlementId}
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
-
-    <select id="countRWPoundageTurnover" resultType="java.math.BigDecimal">
-        SELECT sum(poundage_amount) FROM cct_assets_charge WHERE
-        record_type = #{recordType} AND settlement_id = #{settlementId} AND status = 1
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
-
-    <select id="countTCExchanges" resultType="java.math.BigDecimal">
-        SELECT SUM(turnover_amount) FROM assets_turnover WHERE settlement_id = 1
-        <if test="settlementId == 11">
-            AND turnover_type = 6
-        </if>
-        <if test="settlementId == 12">
-            AND turnover_type = 5
-        </if>
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
-
-    <select id="countTurnoverAmount" resultType="java.math.BigDecimal">
-        SELECT SUM(turnover_amount) FROM assets_turnover WHERE turnover_type = #{turnoverType}
-        <if test="dateStr!=null">
-            AND DATE_FORMAT(create_time,'%Y-%m-%d')=#{dateStr}
-        </if>
-    </select>
 </mapper>

@@ -8,6 +8,7 @@ import org.apache.ibatis.type.Alias;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Alias("LctAssets")
@@ -27,8 +28,13 @@ public class LctAssets implements Serializable {
     private String userId; //用户id
 
     @Column(name = Assets_amount)
-    private BigDecimal assetsAmount; //资产数目
+    private BigDecimal assetsAmount; //可用资产数目
 
+
+    private String coinName;
+    private BigDecimal freeAmount;//可用数目
+    private BigDecimal frozenAmount;//冻结数目
+    private List<CctFinanceLog> financeLogs;//财务记录
 
     //DB Column name
     public static final String Id = "id";

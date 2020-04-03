@@ -3,10 +3,10 @@
 <mapper namespace="com.converage.mapper.transaction.CctOrderMapper">
 
     <resultMap id="cctOrderMap" type="com.converage.entity.transaction.CctOrder">
-        <id property="id" column="id"></id>
-        <result property="transactionUnit" column="transaction_unit"></result>
-        <result property="transactionNumber" column="transaction_number"></result>
-        <result property="transactionSurplusNumber" column="transaction_surplus_number"></result>
+        <id property="id" column="id"/>
+        <result property="transactionUnit" column="transaction_unit"/>
+        <result property="transactionNumber" column="transaction_number"/>
+        <result property="transactionSurplusNumber" column="transaction_surplus_number"/>
     </resultMap>
 
 

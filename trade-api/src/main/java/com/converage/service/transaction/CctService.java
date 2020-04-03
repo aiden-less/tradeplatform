@@ -166,12 +166,7 @@ public class CctService extends BaseService {
     //高于成交价的订单退款定时任务
     public void refundSurplusFrozenAssets() {
         String errorMsg = "多余冻结资产退款失败";
-
-
-        //TODO 缺少已结束的查询条件 订单剩余数量为零，且交易状态为结束
-        int limit = 100;
-        List<CctFrozenAssets> cctUserFrozenAssetsList = cctFrozenAssetsMapper.listRefund(TransactionEnum.FINISH.getType(), limit);
-
+        List<CctFrozenAssets> cctUserFrozenAssetsList = cctFrozenAssetsMapper.listRefund(TransactionEnum.FINISH.getType());
 
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
@@ -191,10 +186,6 @@ public class CctService extends BaseService {
             }
         });
     }
-
-
-
-
 
 
 }

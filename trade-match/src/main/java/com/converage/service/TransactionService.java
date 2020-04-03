@@ -170,7 +170,7 @@ public class TransactionService {
 
                 String tradeCoinId = tradePair.getTradeCoinId();
 
-                ValueCheckUtils.notZero(userCoinAssetsService.increaseUserCoinAssets(buyerUserId, buyerGetAssets, tradeCoinId), "资产处理异常"); //资产处理
+                ValueCheckUtils.notZero(userCoinAssetsService.increaseUserCoinAssets(buyerUserId, buyerGetAssets, tradeCoinId), "买家资产处理异常"); //资产处理
                 ValueCheckUtils.notZero(transactionOrderDetailService.save(buyOrderId, tradePair, doneUnit, doneNumber, buyerGetAssetsPoundage), "资产处理异常");//订单成交记录
 
 
@@ -181,7 +181,7 @@ public class TransactionService {
 
                 String valuationCoinId = tradePair.getValuationCoinId();
 
-                ValueCheckUtils.notZero(userCoinAssetsService.increaseUserCoinAssets(sellerUserId, sellerGetAssets, valuationCoinId), "资产处理异常"); //资产处理
+                ValueCheckUtils.notZero(userCoinAssetsService.increaseUserCoinAssets(sellerUserId, sellerGetAssets, valuationCoinId), "卖家资产处理异常"); //资产处理
                 ValueCheckUtils.notZero(transactionOrderDetailService.save(sellOrderId, tradePair, doneUnit, doneNumber, sellerGetAssetsPoundage), "资产处理异常");//订单成交记录
 
                 //扣除冻结资产
@@ -198,7 +198,7 @@ public class TransactionService {
 
     }
 
-
+    //扣除订单的剩余数量
     public int decreaseOrderSurplusNumber(String orderId, BigDecimal number, List<String> finishIdList) {
         StringBuilder sql = new StringBuilder("UPDATE assets_transaction_order SET transaction_surplus_number = transaction_surplus_number - ?");
         if (finishIdList.contains(orderId)) {

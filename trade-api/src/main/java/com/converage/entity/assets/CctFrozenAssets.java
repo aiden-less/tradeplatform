@@ -33,7 +33,7 @@ public class CctFrozenAssets implements Serializable{
     private String orderId; //订单Id
 
     @Column(name = Assets_amount)
-    private BigDecimal assetsAmount; //资产数目
+    private BigDecimal assetsAmount; //冻结资产数目
 
     @Column(name = If_refund)
     private Boolean ifRefund; //是否已退回

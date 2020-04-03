@@ -8,7 +8,7 @@ import com.converage.service.sys.SubscriberService;
 import com.converage.architecture.utils.JwtUtils;
 import com.converage.architecture.utils.ResultUtils;
 import com.google.common.collect.ImmutableMap;
-import com.converage.service.user.UserAssetsService;
+import com.converage.service.assets.UserAssetsService;
 import com.converage.service.user.UserSendService;
 import com.converage.utils.ValueCheckUtils;
 import org.apache.commons.lang3.StringUtils;
