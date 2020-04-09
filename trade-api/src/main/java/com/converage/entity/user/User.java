@@ -61,11 +61,21 @@ public class User extends EncryptEntity implements Serializable { //用户信息
     @Column(name = If_can_transfer)
     private Boolean ifCanTransfer; //是否可以转账
 
+    @Column(name = Phone_valid_flag)
+    private Boolean phoneValidFlag;//短信验证
+
+    @Column(name = Email_valid_flag)
+    private Boolean emailValidFlag;//邮箱验证
+
+    @Column(name = Google_valid_flag)
+    private Boolean googleValidFlag;//谷歌验证
+
+
     //扩展属性
     private String accessToken; //访问token
     private String msgCode; //短信验证码
-    private String picCode; //图形验证码
     private Integer msgType; //UserConst.MSG_CODE_TYPE_* 短信验证码类型
+
 
 
     //DB Column name
@@ -86,7 +96,10 @@ public class User extends EncryptEntity implements Serializable { //用户信息
     public static final String If_can_recharge = "if_can_recharge";
     public static final String If_can_withdraw = "if_can_withdraw";
     public static final String If_can_transfer = "if_can_transfer";
-
+    public static final String Phone_valid_flag = "phone_valid_flag";
+    public static final String Email_valid_flag = "email_valid_flag";
+    public static final String Google_valid_flag = "google_valid_flag";
+    public static final String Token_alive = "token_alive";
 
     public User() {
 

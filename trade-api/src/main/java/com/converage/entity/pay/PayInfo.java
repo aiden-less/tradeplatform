@@ -20,8 +20,14 @@ public class PayInfo implements Serializable {
     @Column(name = User_id)
     private String userId;
 
+    @Column(name = Real_name)
+    private String realName;
+
     @Column(name = Bank_name)
     private String bankName;
+
+    @Column(name = Bank_address)
+    private String bankAddress;
 
     @Column(name = Account)
     private String account;
@@ -35,7 +41,9 @@ public class PayInfo implements Serializable {
     //DB Column name
     public static final String Id = "id";
     public static final String User_id = "user_id";
+    public static final String Real_name = "real_name";
     public static final String Bank_name = "bank_name";
+    public static final String Bank_address = "bank_address";
     public static final String Account = "account";
     public static final String Qrcode = "qrcode";
     public static final String Create_time = "create_time";

@@ -1,5 +1,8 @@
 package com.converage.service.transaction;
 
+import com.converage.architecture.utils.UUIDUtils;
+import com.converage.constance.LctOrderStatus;
+import com.converage.mapper.transaction.LctOrderLogMapper;
 import com.google.common.collect.ImmutableMap;
 import com.converage.architecture.exception.BusinessException;
 import com.converage.architecture.service.BaseService;
@@ -35,12 +38,15 @@ public class LctService extends BaseService {
     private LctAssetsMapper lctAssetsMapper;
 
     @Autowired
+    private LctOrderLogMapper lctOrderLogMapper;
+
+    @Autowired
     private LctFrozenAssetsMapper lctFrozenAssetsMapper;
 
     @Autowired
     private LctMerchantOrderMapper lctMerchantOrderMapper;
 
-    //创建法币商户订单 （商户操作）
+    //创建法币广告
     public void createOrder(String userId, String coinId, Integer transactionType, BigDecimal transactionUnit, BigDecimal transactionNumber) {
         Map<String, Object> whereMap = ImmutableMap.of(
                 CctAssets.User_id + "=", userId,
@@ -106,8 +112,11 @@ public class LctService extends BaseService {
 
         String orderNo = String.valueOf((int) (100000 + Math.random() * 9900000)) + System.currentTimeMillis();
 
+        String uId = UUIDUtils.createUUID();
+
         //散户订单交易记录
         LctOrderLog investorOrderLog = new LctOrderLog();
+        investorOrderLog.setUid(uId);
         investorOrderLog.setUserId(userId);
         investorOrderLog.setOrderNo(orderNo);
         investorOrderLog.setBuyerUserId(buyerUserId);
@@ -118,11 +127,12 @@ public class LctService extends BaseService {
         investorOrderLog.setDoneUnit(lctMerchantOrder.getTransactionUnit());
         investorOrderLog.setDoneNumber(transactionNumber);
         investorOrderLog.setCreateTime(new Timestamp(System.currentTimeMillis()));
-        investorOrderLog.setStatus(TransactionEnum.UN_FINISH.getType());
+        investorOrderLog.setStatus(LctOrderStatus.UN_FINISH.getStatus());
 
 
         //商户订单交易记录
         LctOrderLog merchantOrderLog = new LctOrderLog();
+        merchantOrderLog.setUid(uId);
         merchantOrderLog.setUserId(lctMerchantOrder.getUserId());
         merchantOrderLog.setOrderNo(orderNo);
         merchantOrderLog.setBuyerUserId(userId);
@@ -133,8 +143,7 @@ public class LctService extends BaseService {
         merchantOrderLog.setDoneUnit(lctMerchantOrder.getTransactionUnit());
         merchantOrderLog.setDoneNumber(transactionNumber);
         merchantOrderLog.setCreateTime(new Timestamp(System.currentTimeMillis()));
-        merchantOrderLog.setStatus(TransactionEnum.UN_FINISH.getType());
-
+        merchantOrderLog.setStatus(LctOrderStatus.UN_FINISH.getStatus());
 
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
@@ -151,32 +160,42 @@ public class LctService extends BaseService {
      * 我已付款/我已收款
      *
      * @param userId
-     * @param lctTradeOrderLogId
+     * @param lctOrderLogId
      */
-    public void finishOrder(String userId, String lctTradeOrderLogId) {
-        ValueCheckUtils.notEmptyString(lctTradeOrderLogId, "请选择订单");
+    public void finishOrder(String userId, String lctOrderLogId) {
+        ValueCheckUtils.notEmptyString(lctOrderLogId, "请选择订单");
 
         Map<String, Object> whereMap = ImmutableMap.of(
-                LctOrderLog.Id + "=", lctTradeOrderLogId,
+                LctOrderLog.Id + "=", lctOrderLogId,
                 LctOrderLog.User_id + "=", userId
         );
         LctOrderLog lctOrderLog = selectOneByWhereMap(whereMap, LctOrderLog.class);
 
+
+        int unFinishStatus = LctOrderStatus.UN_FINISH.getStatus();
+        int finishStatus = LctOrderStatus.FINISH.getStatus();
+
+        if (lctOrderLog.getStatus() != unFinishStatus) {
+            throw new BusinessException("订单已经处理");
+        }
+
+
         ValueCheckUtils.notEmpty(lctOrderLog, "未找到订单记录");
 
         int transactionType = lctOrderLog.getTransactionType();
+        String uid = lctOrderLog.getUid();
 
         if (transactionType == TransactionEnum.BUY.getType()) {//我已付款
-            lctOrderLog.setStatus(TransactionEnum.FINISH.getType());
-            ValueCheckUtils.notZero(update(lctOrderLog), "订单处理失败");
+            ValueCheckUtils.notZero(lctOrderLogMapper.updateIfPayFlag(uid, true, unFinishStatus), "订单已经处理");
 
-            //TODO 通知卖家转币
-
+            //TODO 短信通知卖家放行
 
 
         } else {//我已收款
-            lctOrderLog.setStatus(TransactionEnum.FINISH.getType());
-            ValueCheckUtils.notZero(update(lctOrderLog), "订单处理失败");
+            if (lctOrderLog.getIfPay()) {
+                throw new BusinessException("买家尚未确认付款");
+            }
+
 
             String buyerUserId = lctOrderLog.getBuyerUserId();
             String sellerUserId = lctOrderLog.getSellerUserId();
@@ -186,6 +205,8 @@ public class LctService extends BaseService {
             transactionTemplate.execute(new TransactionCallbackWithoutResult() {
                 @Override
                 protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                    ValueCheckUtils.notZero(lctOrderLogMapper.updateStatus(uid, finishStatus, unFinishStatus), "订单已经处理");
+
                     //增加买家法币资产
                     ValueCheckUtils.notZero(lctAssetsMapper.increase(buyerUserId, transferNumber, coinId), "订单处理失败");
                     //减少卖家法币冻结资产

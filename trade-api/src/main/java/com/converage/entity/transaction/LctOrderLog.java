@@ -27,7 +27,7 @@ public class LctOrderLog implements Serializable {
     private String coinId;
 
     @Column(name = Order_no)
-    private String orderNo; //订单ID 也是散户订单和商户订单交易共同标识
+    private String orderNo; //订单号 也是散户订单和商户订单交易共同标识
 
     @Column(name = Transaction_type)
     private Integer transactionType;
@@ -53,6 +53,12 @@ public class LctOrderLog implements Serializable {
     @Column(name = Create_time)
     private Timestamp createTime;
 
+    @Column(name = If_pay)
+    private Boolean ifPay;
+
+    @Column(name = Uid)
+    private String uid;
+
     @Column(name = Status)
     private Integer status;
 
@@ -68,6 +74,8 @@ public class LctOrderLog implements Serializable {
     public static final String Done_unit = "done_unit";
     public static final String Done_number = "done_number";
     public static final String Create_time = "create_time";
+    public static final String If_pay = "if_pay";
+    public static final String Uid = "uid";
     public static final String Status = "status";
 
 }
